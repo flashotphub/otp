@@ -1,0 +1,1913 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Flash OTP Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"/>
+<style>
+:root {
+  --black:#000;--white:#fff;--gray-900:#0a0a0a;--gray-800:#111;--gray-700:#1a1a1a;
+  --gray-600:#2a2a2a;--gray-500:#444;--gray-400:#666;--gray-300:#888;--gray-200:#bbb;
+  --gray-100:#e0e0e0;--gray-50:#f5f5f5;
+  --glass-bg:rgba(255,255,255,0.03);--glass-border:rgba(255,255,255,0.08);
+  --glass-hover:rgba(255,255,255,0.06);
+  --font-display:'Space Grotesk',sans-serif;--font-body:'Inter',sans-serif;--font-mono:'Space Mono',monospace;
+  --radius:12px;--radius-lg:20px;--radius-sm:8px;
+  --transition:0.2s cubic-bezier(0.4,0,0.2,1);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+html{scroll-behavior:smooth;}
+body{background:var(--black);color:var(--white);font-family:var(--font-body);font-size:14px;line-height:1.6;min-height:100vh;overflow-x:hidden;}
+a{color:inherit;text-decoration:none;}
+button{cursor:pointer;font-family:var(--font-body);}
+input,select,textarea{font-family:var(--font-body);}
+
+/* MESH BG */
+.mesh-bg{position:fixed;inset:0;z-index:0;pointer-events:none;}
+.mesh-bg::before{content:'';position:absolute;inset:0;
+  background:radial-gradient(ellipse 80% 50% at 20% 10%,rgba(255,255,255,0.03) 0%,transparent 60%),
+             radial-gradient(ellipse 60% 40% at 80% 80%,rgba(255,255,255,0.02) 0%,transparent 60%);
+}
+.mesh-orb{position:absolute;border-radius:50%;filter:blur(80px);animation:orbFloat 12s ease-in-out infinite;}
+.orb1{width:400px;height:400px;background:rgba(255,255,255,0.015);top:-10%;left:-5%;animation-delay:0s;}
+.orb2{width:300px;height:300px;background:rgba(255,255,255,0.01);bottom:-10%;right:-5%;animation-delay:-6s;}
+@keyframes orbFloat{0%,100%{transform:translate(0,0);}50%{transform:translate(30px,20px);}}
+
+/* GLASS CARD */
+.glass{background:var(--glass-bg);border:1px solid var(--glass-border);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-radius:var(--radius-lg);}
+.glass-sm{background:var(--glass-bg);border:1px solid var(--glass-border);backdrop-filter:blur(12px);border-radius:var(--radius);}
+
+/* NAV */
+nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:0 24px;height:60px;
+  display:flex;align-items:center;justify-content:space-between;
+  background:rgba(0,0,0,0.8);backdrop-filter:blur(24px);border-bottom:1px solid var(--glass-border);}
+.nav-logo{font-family:var(--font-display);font-size:15px;font-weight:700;letter-spacing:0.05em;display:flex;align-items:center;gap:8px;}
+.nav-logo span{color:var(--gray-300);}
+.nav-logo .dot{width:6px;height:6px;background:var(--white);border-radius:50%;display:inline-block;}
+.nav-links{display:flex;align-items:center;gap:4px;}
+.nav-links button{background:none;border:none;color:var(--gray-300);font-size:13px;padding:6px 12px;border-radius:var(--radius-sm);transition:all var(--transition);}
+.nav-links button:hover,.nav-links button.active{background:var(--glass-hover);color:var(--white);}
+.nav-right{display:flex;align-items:center;gap:10px;}
+.wallet-pill{background:var(--glass-bg);border:1px solid var(--glass-border);padding:5px 14px;border-radius:100px;font-size:13px;font-family:var(--font-mono);color:var(--white);letter-spacing:0.02em;}
+.nav-avatar{width:32px;height:32px;border-radius:50%;background:var(--gray-600);border:1px solid var(--glass-border);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:600;font-family:var(--font-display);cursor:pointer;transition:all var(--transition);letter-spacing:0;}border:1px solid var(--glass-border);display:flex;align-items:center;justify-content:center;font-size:13px;cursor:pointer;transition:all var(--transition);}
+.nav-avatar:hover{border-color:var(--gray-400);}
+
+/* LAYOUT */
+.main{position:relative;z-index:1;padding-top:60px;}
+.page{display:none;min-height:calc(100vh - 60px);padding:32px 24px;max-width:1100px;margin:0 auto;}
+.page.active{display:block;}
+
+/* HERO */
+.hero{padding:80px 0 60px;}
+.hero-tag{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--glass-border);border-radius:100px;padding:4px 12px 4px 6px;font-size:11px;color:var(--gray-300);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:28px;}
+.hero-tag .pulse{width:6px;height:6px;background:var(--white);border-radius:50%;position:relative;}
+.hero-tag .pulse::after{content:'';position:absolute;inset:-3px;border-radius:50%;border:1px solid var(--gray-400);animation:pulse 2s ease-out infinite;}
+@keyframes pulse{0%{opacity:1;transform:scale(1);}100%{opacity:0;transform:scale(2.5);}}
+.hero h1{font-family:var(--font-display);font-size:clamp(36px,6vw,72px);font-weight:700;line-height:1.05;letter-spacing:-0.03em;margin-bottom:20px;}
+.hero h1 em{font-style:normal;color:var(--gray-400);}
+.hero p{font-size:16px;color:var(--gray-300);max-width:480px;margin-bottom:36px;line-height:1.7;}
+.hero-cta{display:flex;gap:12px;flex-wrap:wrap;}
+.btn{display:inline-flex;align-items:center;gap:8px;padding:11px 22px;border-radius:var(--radius);font-size:13px;font-weight:500;border:1px solid transparent;transition:all var(--transition);letter-spacing:0.01em;}
+.btn-primary{background:var(--white);color:var(--black);border-color:var(--white);}
+.btn-primary:hover{background:var(--gray-100);transform:translateY(-1px);}
+.btn-ghost{background:transparent;color:var(--white);border-color:var(--glass-border);}
+.btn-ghost:hover{background:var(--glass-hover);border-color:var(--gray-500);}
+.btn-sm{padding:7px 14px;font-size:12px;border-radius:var(--radius-sm);}
+.btn-danger{background:transparent;color:#ff4444;border-color:rgba(255,68,68,0.3);}
+.btn-danger:hover{background:rgba(255,68,68,0.08);}
+
+/* STATS ROW */
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:1px;background:var(--glass-border);border:1px solid var(--glass-border);border-radius:var(--radius);overflow:hidden;margin:48px 0;}
+.stat{background:var(--gray-900);padding:24px;text-align:center;}
+.stat-num{font-family:var(--font-display);font-size:28px;font-weight:700;letter-spacing:-0.02em;}
+.stat-label{font-size:11px;color:var(--gray-400);text-transform:uppercase;letter-spacing:0.1em;margin-top:4px;}
+
+/* SECTION */
+.section-header{display:flex;align-items:baseline;justify-content:space-between;margin-bottom:20px;}
+.section-title{font-family:var(--font-display);font-size:18px;font-weight:600;letter-spacing:-0.01em;}
+.section-sub{font-size:12px;color:var(--gray-400);}
+
+/* BANNERS */
+.banner-strip{overflow:hidden;border-radius:var(--radius-lg);margin-bottom:32px;position:relative;}
+.banner-slides{display:flex;transition:transform 0.5s cubic-bezier(0.4,0,0.2,1);}
+.banner-slide{min-width:100%;aspect-ratio:3/1;background:var(--gray-800);border-radius:var(--radius-lg);overflow:hidden;position:relative;display:flex;align-items:center;padding:32px;}
+.banner-slide img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0.8;}
+.banner-content{position:relative;z-index:1;}
+.banner-tag{font-size:10px;text-transform:uppercase;letter-spacing:0.15em;color:var(--gray-300);margin-bottom:8px;}
+.banner-title{font-family:var(--font-display);font-size:clamp(18px,3vw,28px);font-weight:700;line-height:1.2;margin-bottom:8px;}
+.banner-sub{font-size:13px;color:var(--gray-300);}
+.banner-dots{display:flex;gap:6px;justify-content:center;margin-top:12px;}
+.banner-dot{width:6px;height:6px;border-radius:50%;background:var(--gray-600);transition:all var(--transition);cursor:pointer;}
+.banner-dot.active{background:var(--white);width:20px;border-radius:3px;}
+
+/* SERVICES GRID */
+.services-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;}
+.service-card{background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:var(--radius);padding:16px;cursor:pointer;transition:all var(--transition);position:relative;overflow:hidden;}
+.service-card::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 50% 0%,rgba(255,255,255,0.04),transparent 70%);opacity:0;transition:opacity var(--transition);}
+.service-card:hover{border-color:var(--gray-500);transform:translateY(-2px);}
+.service-card:hover::before{opacity:1;}
+.service-logo{width:40px;height:40px;border-radius:10px;background:#000;margin-bottom:12px;display:flex;align-items:center;justify-content:center;font-size:18px;overflow:hidden;}
+.service-logo img{width:100%;height:100%;object-fit:cover;}
+.service-name{font-size:13px;font-weight:500;margin-bottom:4px;line-height:1.3;}
+.service-price{font-family:var(--font-mono);font-size:13px;color:var(--gray-300);}
+.service-code{font-size:10px;color:var(--gray-500);letter-spacing:0.05em;margin-top:3px;}
+
+/* ORDER MODAL */
+.modal-overlay{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,0.85);backdrop-filter:blur(8px);display:none;align-items:center;justify-content:center;padding:20px;}
+.modal-overlay.open{display:flex;}
+.modal{width:100%;max-width:420px;background:var(--gray-900);border:1px solid var(--glass-border);border-radius:var(--radius-lg);overflow:hidden;animation:slideUp 0.25s ease;}
+@keyframes slideUp{from{opacity:0;transform:translateY(16px);}to{opacity:1;transform:translateY(0);}}
+.modal-header{padding:20px 24px 0;display:flex;align-items:center;justify-content:space-between;}
+.modal-title{font-family:var(--font-display);font-size:16px;font-weight:600;}
+.modal-close{background:none;border:none;color:var(--gray-400);font-size:20px;padding:4px;display:flex;cursor:pointer;}
+.modal-body{padding:20px 24px 24px;}
+.modal-service-info{display:flex;align-items:center;gap:12px;padding:14px;background:var(--gray-800);border-radius:var(--radius);margin-bottom:18px;}
+.modal-logo{width:44px;height:44px;border-radius:10px;background:var(--gray-700);display:flex;align-items:center;justify-content:center;font-size:20px;overflow:hidden;flex-shrink:0;}
+.modal-logo img{width:100%;height:100%;object-fit:cover;}
+.modal-service-name{font-weight:600;font-size:14px;}
+.modal-price{font-family:var(--font-mono);font-size:12px;color:var(--gray-300);margin-top:2px;}
+.form-group{margin-bottom:14px;}
+.form-label{display:block;font-size:11px;color:var(--gray-400);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px;}
+.form-select{width:100%;background:var(--gray-800);border:1px solid var(--glass-border);color:var(--white);padding:10px 14px;border-radius:var(--radius-sm);font-size:13px;outline:none;transition:border-color var(--transition);}
+.form-select:focus{border-color:var(--gray-400);}
+.form-select option{background:var(--gray-800);}
+
+/* ACTIVE SLOTS */
+.slots-list{display:flex;flex-direction:column;gap:10px;}
+.slot-card{background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:var(--radius);padding:16px;transition:all var(--transition);}
+.slot-card.success{border-color:rgba(255,255,255,0.2);}
+.slot-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;}
+.slot-info{display:flex;align-items:center;gap:10px;}
+.slot-icon{width:36px;height:36px;border-radius:8px;background:var(--gray-800);display:flex;align-items:center;justify-content:center;font-size:16px;overflow:hidden;flex-shrink:0;}
+.slot-icon img{width:100%;height:100%;object-fit:cover;}
+.slot-service{font-size:13px;font-weight:500;}
+.slot-number{font-family:var(--font-mono);font-size:16px;color:var(--white);margin-top:4px;letter-spacing:0.05em;font-weight:700;}
+.slot-status{display:inline-flex;align-items:center;gap:5px;font-size:11px;padding:3px 10px;border-radius:100px;border:1px solid;}
+.slot-status.pending{color:var(--gray-300);border-color:var(--gray-600);}
+.slot-status.success{color:#eee;border-color:rgba(255,255,255,0.3);}
+.slot-status.cancelled,.slot-status.expired{color:var(--gray-500);border-color:var(--gray-700);}
+.slot-status .blink{width:5px;height:5px;border-radius:50%;background:currentColor;animation:blink 1.2s ease-in-out infinite;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:0.3;}}
+.otp-box{background:var(--gray-800);border:1px solid var(--glass-border);border-radius:var(--radius-sm);padding:12px 14px;display:flex;align-items:center;justify-content:space-between;margin-top:10px;}
+.otp-val{font-family:var(--font-mono);font-size:20px;font-weight:700;letter-spacing:0.08em;}
+.otp-sms{font-size:11px;color:var(--gray-400);margin-top:3px;}
+.slot-actions{display:flex;gap:6px;margin-top:10px;}
+.slot-timer{font-size:15px;color:var(--gray-100);font-family:var(--font-mono);font-weight:700;margin-top:4px;}
+.progress-bar{height:2px;background:var(--gray-800);border-radius:1px;margin-top:8px;overflow:hidden;}
+.progress-fill{height:100%;background:var(--gray-400);transition:width 1s linear;}
+.otp-list-item{display:flex;align-items:center;gap:8px;padding:6px 0;border-top:1px solid var(--gray-800);}
+.otp-idx{font-size:10px;color:var(--gray-500);width:20px;text-align:center;font-family:var(--font-mono);}
+
+/* COPY BTN */
+.copy-btn{background:var(--gray-700);border:none;color:var(--gray-300);padding:5px 10px;border-radius:6px;font-size:11px;cursor:pointer;transition:all var(--transition);}
+.copy-btn:hover{background:var(--gray-600);color:var(--white);}
+.copy-btn.copied{background:var(--gray-600);color:var(--white);}
+
+/* WALLET PAGE */
+.wallet-hero{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:28px;}
+.wallet-card{background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:var(--radius-lg);padding:24px;position:relative;overflow:hidden;}
+.wallet-card::after{content:'';position:absolute;top:-30px;right:-30px;width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,0.02);pointer-events:none;}
+.wallet-label{font-size:11px;color:var(--gray-400);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:8px;}
+.wallet-amount{font-family:var(--font-display);font-size:36px;font-weight:700;letter-spacing:-0.03em;line-height:1;}
+.wallet-amount sup{font-size:16px;vertical-align:top;margin-top:6px;display:inline-block;color:var(--gray-300);}
+
+/* RECHARGE */
+.recharge-form{background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:var(--radius-lg);padding:24px;}
+.amount-pills{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;}
+.amount-pill{background:var(--gray-800);border:1px solid var(--glass-border);color:var(--gray-300);padding:6px 14px;border-radius:100px;font-size:12px;cursor:pointer;transition:all var(--transition);font-family:var(--font-mono);}
+.amount-pill:hover,.amount-pill.active{background:var(--white);color:var(--black);border-color:var(--white);}
+.form-input{width:100%;background:var(--gray-800);border:1px solid var(--glass-border);color:var(--white);padding:10px 14px;border-radius:var(--radius-sm);font-size:14px;outline:none;transition:border-color var(--transition);}
+.form-input:focus{border-color:var(--gray-400);}
+.form-input::placeholder{color:var(--gray-500);}
+.upload-zone{border:1px dashed var(--gray-600);border-radius:var(--radius);padding:24px;text-align:center;cursor:pointer;transition:all var(--transition);position:relative;margin-top:14px;}
+.upload-zone:hover{border-color:var(--gray-400);background:var(--glass-bg);}
+.upload-zone input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;}
+.upload-icon{font-size:28px;margin-bottom:8px;}
+.upload-text{font-size:13px;color:var(--gray-400);}
+.upload-preview{max-height:120px;border-radius:8px;margin-top:12px;object-fit:contain;display:none;}
+
+/* REDEEM */
+.redeem-row{display:flex;gap:8px;margin-top:20px;}
+.redeem-input{flex:1;background:var(--gray-800);border:1px solid var(--glass-border);color:var(--white);padding:10px 14px;border-radius:var(--radius-sm);font-size:13px;font-family:var(--font-mono);letter-spacing:0.1em;text-transform:uppercase;outline:none;transition:border-color var(--transition);}
+.redeem-input:focus{border-color:var(--gray-400);}
+.redeem-input::placeholder{letter-spacing:0.02em;text-transform:none;font-family:var(--font-body);}
+
+/* TXN LIST */
+.txn-list{display:flex;flex-direction:column;gap:1px;background:var(--glass-border);border:1px solid var(--glass-border);border-radius:var(--radius);overflow:hidden;margin-top:20px;}
+.txn-item{background:var(--gray-900);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;}
+.txn-left{display:flex;align-items:center;gap:10px;}
+.txn-icon{width:30px;height:30px;border-radius:8px;background:var(--gray-800);display:flex;align-items:center;justify-content:center;font-size:13px;}
+.txn-desc{font-size:13px;font-weight:500;}
+.txn-date{font-size:11px;color:var(--gray-500);margin-top:1px;}
+.txn-amount{font-family:var(--font-mono);font-size:13px;font-weight:600;}
+.txn-amount.credit{color:#eee;}
+.txn-amount.debit{color:var(--gray-400);}
+
+/* AUTH */
+.auth-wrap{display:flex;align-items:center;justify-content:center;min-height:calc(100vh - 60px);padding:32px 24px;}
+.auth-card{width:100%;max-width:380px;background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:var(--radius-lg);padding:32px;backdrop-filter:blur(20px);}
+.auth-logo{font-family:var(--font-display);font-size:20px;font-weight:700;text-align:center;margin-bottom:8px;}
+.auth-sub{text-align:center;color:var(--gray-400);font-size:13px;margin-bottom:28px;}
+.auth-tabs{display:flex;background:var(--gray-800);border-radius:var(--radius-sm);padding:3px;margin-bottom:24px;}
+.auth-tab{flex:1;text-align:center;padding:7px;border-radius:7px;font-size:13px;cursor:pointer;transition:all var(--transition);color:var(--gray-400);}
+.auth-tab.active{background:var(--white);color:var(--black);font-weight:500;}
+.auth-form .form-group{margin-bottom:14px;}
+.auth-form .form-label{display:block;font-size:11px;color:var(--gray-400);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:5px;}
+.otp-row{display:flex;gap:8px;}
+.otp-row .form-input{flex:1;}
+.send-otp-btn{white-space:nowrap;background:var(--gray-700);border:1px solid var(--glass-border);color:var(--white);padding:10px 14px;border-radius:var(--radius-sm);font-size:12px;cursor:pointer;transition:all var(--transition);}
+.send-otp-btn:hover{background:var(--gray-600);}
+.send-otp-btn:disabled{opacity:0.5;cursor:not-allowed;}
+.auth-divider{text-align:center;color:var(--gray-600);font-size:12px;margin:16px 0;position:relative;}
+.auth-divider::before,.auth-divider::after{content:'';position:absolute;top:50%;width:42%;height:1px;background:var(--gray-800);}
+.auth-divider::before{left:0;}
+.auth-divider::after{right:0;}
+
+/* PROFILE PAGE */
+.profile-header{display:flex;align-items:center;gap:16px;padding:24px;background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:var(--radius-lg);margin-bottom:20px;}
+.profile-avatar{width:60px;height:60px;border-radius:50%;background:var(--gray-700);display:flex;align-items:center;justify-content:center;font-family:var(--font-display);font-size:24px;font-weight:700;flex-shrink:0;}
+.profile-name{font-family:var(--font-display);font-size:20px;font-weight:600;}
+.profile-email{font-size:13px;color:var(--gray-400);margin-top:2px;}
+.profile-badge{display:inline-flex;align-items:center;gap:4px;font-size:10px;text-transform:uppercase;letter-spacing:0.08em;border:1px solid var(--glass-border);border-radius:100px;padding:2px 8px;color:var(--gray-400);margin-top:6px;}
+.info-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px;}
+.info-item{background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:var(--radius);padding:16px;}
+.info-label{font-size:10px;color:var(--gray-500);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:6px;}
+.info-val{font-family:var(--font-mono);font-size:13px;word-break:break-all;}
+.info-val.large{font-size:18px;font-family:var(--font-display);font-weight:600;letter-spacing:-0.01em;}
+.apikey-row{display:flex;align-items:center;gap:8px;}
+.apikey-text{flex:1;font-family:var(--font-mono);font-size:12px;color:var(--gray-300);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+
+/* ADMIN */
+.admin-tabs{display:flex;gap:4px;margin-bottom:24px;border-bottom:1px solid var(--gray-800);padding-bottom:0;}
+.admin-tab{background:none;border:none;color:var(--gray-400);font-size:13px;padding:8px 16px;border-bottom:2px solid transparent;margin-bottom:-1px;cursor:pointer;transition:all var(--transition);}
+.admin-tab.active{color:var(--white);border-bottom-color:var(--white);}
+.admin-panel{display:none;}
+.admin-panel.active{display:block;}
+.data-table{width:100%;border-collapse:collapse;font-size:13px;}
+.data-table th{text-align:left;padding:10px 14px;font-size:10px;text-transform:uppercase;letter-spacing:0.08em;color:var(--gray-500);border-bottom:1px solid var(--gray-800);}
+.data-table td{padding:12px 14px;border-bottom:1px solid var(--gray-800);color:var(--gray-200);}
+.data-table tr:last-child td{border-bottom:none;}
+.data-table tr:hover td{background:var(--glass-bg);}
+.badge{display:inline-block;font-size:10px;padding:2px 8px;border-radius:100px;border:1px solid;}
+.badge-pending{color:var(--gray-400);border-color:var(--gray-600);}
+.badge-approved{color:#ddd;border-color:rgba(255,255,255,0.25);}
+.badge-rejected{color:#ff4444;border-color:rgba(255,68,68,0.3);}
+
+/* ORDERS HISTORY */
+.order-card{background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:var(--radius);padding:14px 16px;display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;}
+.order-icon{width:36px;height:36px;border-radius:8px;background:var(--gray-800);display:flex;align-items:center;justify-content:center;overflow:hidden;}
+.order-icon img{width:100%;height:100%;object-fit:cover;}
+.order-info{}
+.order-service{font-size:13px;font-weight:500;}
+.order-meta{font-size:11px;color:var(--gray-500);margin-top:2px;font-family:var(--font-mono);}
+.order-right{text-align:right;display:flex;flex-direction:column;align-items:flex-end;}
+.order-otp{font-family:var(--font-mono);font-size:15px;font-weight:700;}
+.order-price{font-size:11px;color:var(--gray-500);margin-top:2px;}
+.orders-list{display:flex;flex-direction:column;gap:8px;}
+
+/* TOAST */
+.toast-wrap{position:fixed;bottom:24px;right:24px;z-index:300;display:flex;flex-direction:column;gap:8px;pointer-events:none;}
+.toast{background:var(--gray-800);border:1px solid var(--glass-border);border-radius:var(--radius-sm);padding:10px 16px;font-size:13px;animation:toastIn 0.25s ease;min-width:200px;backdrop-filter:blur(12px);}
+.toast.removing{animation:toastOut 0.25s ease forwards;}
+@keyframes toastIn{from{opacity:0;transform:translateX(20px);}to{opacity:1;transform:translateX(0);}}
+@keyframes toastOut{to{opacity:0;transform:translateX(20px);}}
+.toast-success{border-color:rgba(255,255,255,0.2);}
+.toast-error{border-color:rgba(255,68,68,0.3);color:#ff9999;}
+
+/* EMPTY */
+.empty{text-align:center;padding:60px 20px;color:var(--gray-500);}
+.empty-icon{font-size:40px;margin-bottom:12px;opacity:0.5;}
+.empty-text{font-size:14px;}
+
+/* LOADING SPINNER */
+.spinner{width:18px;height:18px;border:2px solid var(--gray-700);border-top-color:var(--white);border-radius:50%;animation:spin 0.6s linear infinite;display:inline-block;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* DIVIDER */
+.divider{height:1px;background:var(--glass-border);margin:24px 0;}
+
+/* REFER SECTION */
+.refer-card{background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:var(--radius-lg);padding:24px;margin-top:20px;}
+.refer-code-box{background:var(--gray-800);border:1px solid var(--glass-border);border-radius:var(--radius-sm);padding:14px 18px;display:flex;align-items:center;justify-content:space-between;margin:16px 0;}
+.refer-code{font-family:var(--font-mono);font-size:20px;font-weight:700;letter-spacing:0.12em;}
+.refer-stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.refer-stat{background:var(--gray-800);border-radius:var(--radius-sm);padding:14px;text-align:center;}
+.refer-stat-num{font-family:var(--font-display);font-size:22px;font-weight:700;}
+.refer-stat-label{font-size:11px;color:var(--gray-400);margin-top:2px;}
+
+/* SETTINGS */
+.settings-section{background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:var(--radius-lg);padding:24px;margin-bottom:16px;}
+.settings-row{display:flex;align-items:center;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--gray-800);}
+.settings-row:last-child{border-bottom:none;padding-bottom:0;}
+.settings-label{font-size:13px;font-weight:500;}
+.settings-desc{font-size:11px;color:var(--gray-400);margin-top:2px;}
+
+/* MOBILE */
+@media(max-width:640px){
+  .hero h1{font-size:36px;}
+  .wallet-hero{grid-template-columns:1fr;}
+  .info-grid{grid-template-columns:1fr;}
+  .stats-row{grid-template-columns:1fr;}
+  .banner-slide{aspect-ratio:2/1;}
+  nav .nav-links{display:none;}
+  .mobile-nav{display:flex!important;}
+}
+.mobile-nav{display:none;position:fixed;bottom:0;left:0;right:0;z-index:100;background:rgba(0,0,0,0.95);backdrop-filter:blur(24px);border-top:1px solid var(--glass-border);padding:8px 0 max(8px,env(safe-area-inset-bottom));justify-content:space-around;}
+.mobile-nav-btn{background:none;border:none;color:var(--gray-400);display:flex;flex-direction:column;align-items:center;gap:3px;font-size:9px;text-transform:uppercase;letter-spacing:0.05em;padding:6px 12px;transition:color var(--transition);cursor:pointer;}
+.mobile-nav-btn.active,.mobile-nav-btn:hover{color:var(--white);}
+.mobile-nav-btn .icon{font-size:18px;}
+
+/* NOTIFICATION DOT */
+.notif-dot{width:6px;height:6px;background:var(--white);border-radius:50%;position:absolute;top:2px;right:2px;}
+
+/* API DOCS STYLES */
+.api-endpoint{background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:var(--radius);margin-bottom:10px;overflow:hidden;}
+.api-ep-header{padding:14px 16px;display:flex;align-items:center;gap:10px;cursor:pointer;}
+.api-method{font-family:var(--font-mono);font-size:10px;padding:2px 8px;border-radius:4px;background:var(--gray-800);border:1px solid var(--glass-border);letter-spacing:0.05em;}
+.api-ep-title{font-size:13px;font-weight:500;}
+.api-ep-body{padding:0 16px 14px;border-top:1px solid var(--glass-border);display:none;}
+.api-ep-body.open{display:block;}
+.api-url{font-family:var(--font-mono);font-size:11px;color:var(--gray-300);background:var(--gray-800);padding:10px 12px;border-radius:var(--radius-sm);margin:10px 0;word-break:break-all;line-height:1.6;}
+.api-response{font-family:var(--font-mono);font-size:11px;color:var(--gray-300);background:var(--gray-900);padding:10px 12px;border-radius:var(--radius-sm);margin-top:6px;word-break:break-all;}
+</style>
+</head>
+<body>
+
+<div class="mesh-bg">
+  <div class="mesh-orb orb1"></div>
+  <div class="mesh-orb orb2"></div>
+</div>
+
+<!-- NAV -->
+<nav>
+  <div class="nav-logo">
+    <span class="dot"></span>
+    Flash OTP Hub
+  </div>
+  <div class="nav-links" id="navLinks">
+    <button class="active" onclick="showPage('home')">Home</button>
+    <button onclick="showPage('buy')">Buy Number</button>
+    <button onclick="showPage('orders')">Orders</button>
+    <button onclick="showPage('wallet')">Wallet</button>
+    <button onclick="showPage('profile')">Profile</button>
+    <button onclick="showPage('api-docs')">API</button>
+    <button id="adminNavBtn" onclick="showPage('admin')" style="display:none">Admin</button>
+  </div>
+  <div class="nav-right" id="navRight">
+    <div class="wallet-pill" id="navBalance" style="display:none">₹0.00</div>
+    <div class="nav-avatar" id="navAvatar" onclick="showPage('profile')" style="display:none">U</div>
+    <button class="btn btn-ghost btn-sm" id="loginNavBtn" onclick="showPage('auth')">Sign in</button>
+  </div>
+</nav>
+
+<!-- MOBILE NAV -->
+<div class="mobile-nav" id="mobileNav">
+  <button class="mobile-nav-btn active" onclick="showPage('home')">
+  <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M3 12L12 3l9 9"/><path d="M9 21V12h6v9"/></svg>
+  Home
+</button>
+<button class="mobile-nav-btn" onclick="showPage('buy')">
+  <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+  Buy
+</button>
+<button class="mobile-nav-btn" onclick="showPage('orders')">
+  <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+  Orders
+</button>
+<button class="mobile-nav-btn" onclick="showPage('wallet')">
+  <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><path d="M16 12h.01"/></svg>
+  Wallet
+</button>
+<button class="mobile-nav-btn" onclick="showPage('profile')">
+  <svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+  Profile
+</button>
+</div>
+
+<div class="main">
+
+<!-- ===== HOME PAGE ===== -->
+<div class="page active" id="page-home">
+  <div class="hero">
+    <div class="hero-tag"><span class="pulse"></span>Live &amp; Fast</div>
+    <h1>Virtual OTP<br/><em>Numbers,</em><br/>Instantly.</h1>
+    <p>Buy temporary Indian mobile numbers for any app. Receive OTPs in seconds. No SIM card needed.</p>
+    <div class="hero-cta">
+      <button class="btn btn-primary" onclick="scrollToServices()">Browse Services</button>
+      <button class="btn btn-ghost" onclick="showPage('api-docs')">API Docs →</button>
+    </div>
+  </div>
+
+  <div class="stats-row" id="statsRow">
+    <div class="stat"><div class="stat-num" id="statServices">—</div><div class="stat-label">Services</div></div>
+    <div class="stat"><div class="stat-num">₹20.00</div><div class="stat-label">Min. Recharge</div></div>
+    <div class="stat"><div class="stat-num">10min</div><div class="stat-label">Number Validity</div></div>
+  </div>
+
+  <!-- BANNERS -->
+  <div id="bannerSection" style="display:none">
+    <div class="banner-strip">
+      <div class="banner-slides" id="bannerSlides"></div>
+    </div>
+    <div class="banner-dots" id="bannerDots"></div>
+  </div>
+
+  <!-- ACTIVE SLOTS -->
+  <div id="activeSlotsSection" style="display:none; margin-bottom:32px;">
+    <div class="section-header">
+      <div class="section-title">Active Numbers</div>
+      <span class="section-sub" id="activeSlotCount">0 active</span>
+    </div>
+    <div class="slots-list" id="slotsList"></div>
+  </div>
+
+  <!-- SERVICES -->
+  <div id="servicesSection">
+    <div class="section-header">
+      <div class="section-title">Services</div>
+      <span class="section-sub" id="servicesCount"></span>
+    </div>
+    <div class="services-grid" id="servicesGrid">
+      <!-- skeleton -->
+      <div class="service-card" style="opacity:0.4" id="sk1"><div class="service-logo"></div><div style="height:12px;background:var(--gray-800);border-radius:4px;margin-bottom:6px;"></div><div style="height:10px;background:var(--gray-800);border-radius:4px;width:60%;"></div></div>
+      <div class="service-card" style="opacity:0.3" id="sk2"><div class="service-logo"></div><div style="height:12px;background:var(--gray-800);border-radius:4px;margin-bottom:6px;"></div><div style="height:10px;background:var(--gray-800);border-radius:4px;width:60%;"></div></div>
+      <div class="service-card" style="opacity:0.2" id="sk3"><div class="service-logo"></div><div style="height:12px;background:var(--gray-800);border-radius:4px;margin-bottom:6px;"></div><div style="height:10px;background:var(--gray-800);border-radius:4px;width:60%;"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== BUY NUMBER PAGE ===== -->
+<div class="page" id="page-buy">
+  <div style="margin-bottom:24px;">
+    <div class="section-title" style="font-size:22px;font-family:var(--font-display);letter-spacing:-0.02em;margin-bottom:4px;">Buy Number</div>
+    <div style="color:var(--gray-400);font-size:13px;">Search any app and get an OTP number instantly</div>
+  </div>
+  <div style="position:relative;margin-bottom:20px;">
+  <svg style="position:absolute;left:14px;top:50%;transform:translateY(-50%);pointer-events:none;color:var(--gray-400);" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+  <input class="form-input" type="text" id="buySearchInput" placeholder="Search WhatsApp, Telegram..." oninput="filterBuyServices(this.value)" style="font-size:14px;padding-left:40px;"/>
+</div>
+  <div style="font-size:12px;color:var(--gray-500);margin-bottom:12px;" id="buyResultCount"></div>
+  <div class="services-grid" id="buyServicesGrid">
+    <div class="empty"><div class="spinner"></div></div>
+  </div>
+</div>
+
+<!-- ===== AUTH PAGE ===== -->
+<div class="page" id="page-auth">
+  <div class="auth-wrap">
+    <div class="auth-card">
+      <div class="auth-logo">⚡ Flash OTP Hub</div>
+      <div class="auth-sub">Fast virtual OTP numbers for India</div>
+      <div class="auth-tabs">
+        <div class="auth-tab active" onclick="switchAuthTab('login')">Sign In</div>
+        <div class="auth-tab" onclick="switchAuthTab('signup')">Sign Up</div>
+      </div>
+
+      <!-- LOGIN -->
+      <div id="loginForm" class="auth-form">
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input class="form-input" type="email" id="loginEmail" placeholder="you@example.com"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input class="form-input" type="password" id="loginPassword" placeholder="Password"/>
+        </div>
+        <div class="auth-divider">or sign in with OTP</div>
+        <div class="form-group">
+          <label class="form-label">OTP (optional)</label>
+          <div class="otp-row">
+            <input class="form-input" type="text" id="loginOtp" placeholder="6-digit OTP" maxlength="6"/>
+            <button class="send-otp-btn" id="sendLoginOtpBtn" onclick="sendOtp('login')">Send OTP</button>
+          </div>
+        </div>
+        <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:4px;" onclick="doLogin()">Sign In</button>
+        <div style="text-align:center;margin-top:14px;font-size:12px;color:var(--gray-500)">
+          <span onclick="switchAuthTab('forgot')" style="cursor:pointer;color:var(--gray-300)">Forgot password?</span>
+        </div>
+      </div>
+
+      <!-- SIGNUP -->
+      <div id="signupForm" class="auth-form" style="display:none">
+        <div class="form-group">
+          <label class="form-label">Name</label>
+          <input class="form-input" type="text" id="signupName" placeholder="Your name"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input class="form-input" type="email" id="signupEmail" placeholder="you@example.com"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Verify Email</label>
+          <div class="otp-row">
+            <input class="form-input" type="text" id="signupOtp" placeholder="OTP" maxlength="6"/>
+            <button class="send-otp-btn" id="sendSignupOtpBtn" onclick="sendOtp('signup')">Send OTP</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Password</label>
+          <input class="form-input" type="password" id="signupPassword" placeholder="Min 6 characters"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Referral Code (optional)</label>
+          <input class="form-input" type="text" id="signupRefer" placeholder="e.g. ABC12345" style="text-transform:uppercase"/>
+        </div>
+        <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:4px;" onclick="doSignup()">Create Account</button>
+      </div>
+
+      <!-- FORGOT -->
+      <div id="forgotForm" class="auth-form" style="display:none">
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <div class="otp-row">
+            <input class="form-input" type="email" id="forgotEmail" placeholder="you@example.com"/>
+            <button class="send-otp-btn" id="sendForgotOtpBtn" onclick="sendOtp('forgot')">Send OTP</button>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">OTP</label>
+          <input class="form-input" type="text" id="forgotOtp" placeholder="6-digit OTP" maxlength="6"/>
+        </div>
+        <div class="form-group">
+          <label class="form-label">New Password</label>
+          <input class="form-input" type="password" id="forgotNewPw" placeholder="New password"/>
+        </div>
+        <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:4px;" onclick="doForgotPassword()">Reset Password</button>
+        <div style="text-align:center;margin-top:14px;font-size:12px;">
+          <span onclick="switchAuthTab('login')" style="cursor:pointer;color:var(--gray-300)">← Back to Sign In</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== ORDERS PAGE ===== -->
+<div class="page" id="page-orders">
+  <div style="margin-bottom:24px;">
+    <div class="section-title" style="font-size:22px;font-family:var(--font-display);letter-spacing:-0.02em;margin-bottom:4px;">Orders</div>
+    <div style="color:var(--gray-400);font-size:13px;">Active numbers and past orders</div>
+  </div>
+
+  <div id="ordersActiveSection" style="display:none;margin-bottom:28px;">
+    <div class="section-header">
+      <div class="section-title">Active Numbers</div>
+      <span class="section-sub" id="ordersActiveCount">0 active</span>
+    </div>
+    <div class="slots-list" id="ordersActiveSlotsList"></div>
+  </div>
+
+  <div class="section-header">
+    <div class="section-title">History</div>
+  </div>
+  <div class="orders-list" id="ordersList">
+    <div class="empty"><div class="empty-icon">📋</div><div class="empty-text">No orders yet</div></div>
+  </div>
+</div>
+
+<!-- ===== WALLET PAGE ===== -->
+<div class="page" id="page-wallet">
+  <div style="margin-bottom:24px;">
+    <div class="section-title" style="font-size:22px;font-family:var(--font-display);letter-spacing:-0.02em;margin-bottom:4px;">Wallet</div>
+    <div style="color:var(--gray-400);font-size:13px;">Manage your balance</div>
+  </div>
+
+  <div class="wallet-hero">
+    <div class="wallet-card">
+      <div class="wallet-label">Available Balance</div>
+      <div class="wallet-amount"><sup>₹</sup><span id="walletBal">0.00</span></div>
+    </div>
+    <div class="wallet-card">
+      <div class="wallet-label">Total Recharged</div>
+      <div class="wallet-amount"><sup>₹</sup><span id="walletTotal">0.00</span></div>
+    </div>
+  </div>
+
+  <!-- RECHARGE -->
+  <div class="recharge-form">
+    <div class="section-header" style="margin-bottom:16px;">
+      <div class="section-title">Add Money</div>
+    </div>
+    <div class="amount-pills">
+      <div class="amount-pill" onclick="setAmount(20)">₹20</div>
+      <div class="amount-pill" onclick="setAmount(50)">₹50</div>
+      <div class="amount-pill" onclick="setAmount(100)">₹100</div>
+      <div class="amount-pill" onclick="setAmount(200)">₹200</div>
+      <div class="amount-pill" onclick="setAmount(500)">₹500</div>
+    </div>
+    <input class="form-input" type="number" id="rechargeAmount" placeholder="Enter amount (min ₹20)" min="20"/>
+    <div style="font-size:12px;color:var(--gray-500);margin-top:6px;" id="upiInfo">Loading UPI details...</div>
+    <div class="upload-zone" id="uploadZone">
+      <input type="file" accept="image/*" id="screenshotFile" onchange="previewScreenshot(event)"/>
+      <div class="upload-icon">📸</div>
+      <div class="upload-text">Upload payment screenshot</div>
+      <img class="upload-preview" id="uploadPreview"/>
+    </div>
+    <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:14px;" onclick="submitRecharge()">Submit Recharge Request</button>
+  </div>
+
+  <!-- REDEEM -->
+  <div style="margin-top:20px;">
+    <div class="section-title" style="margin-bottom:4px;">Redeem Code</div>
+    <div style="color:var(--gray-400);font-size:12px;margin-bottom:8px;">Have a gift code? Redeem it instantly.</div>
+    <div class="redeem-row">
+      <input class="redeem-input" id="redeemCodeInput" placeholder="e.g. ABCD-1234-EFGH" maxlength="14" oninput="formatRedeemCode(this)"/>
+      <button class="btn btn-ghost" onclick="doRedeem()">Redeem</button>
+    </div>
+  </div>
+
+  <!-- TRANSACTIONS -->
+  <div style="margin-top:28px;">
+    <div class="section-header">
+      <div class="section-title">Transactions</div>
+      <span class="section-sub" id="txnCount"></span>
+    </div>
+    <div id="txnList">
+      <div class="empty"><div class="empty-icon">💸</div><div class="empty-text">No transactions yet</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== PROFILE PAGE ===== -->
+<div class="page" id="page-profile">
+  <div class="profile-header">
+    <div class="profile-avatar" id="profileAvatar">U</div>
+    <div>
+      <div class="profile-name" id="profileName">—</div>
+      <div class="profile-email" id="profileEmail">—</div>
+      <span class="profile-badge" id="profileBadge">Member</span>
+    </div>
+  </div>
+
+  <div class="info-grid">
+    <div class="info-item">
+      <div class="info-label">Wallet Balance</div>
+      <div class="info-val large">₹<span id="profileBalance">0.00</span></div>
+    </div>
+    <div class="info-item">
+      <div class="info-label">Member Since</div>
+      <div class="info-val" id="profileJoined">—</div>
+    </div>
+  </div>
+
+  <div class="settings-section">
+    <div class="section-title" style="margin-bottom:16px;">API Key</div>
+    <div class="apikey-row">
+      <div class="apikey-text" id="apiKeyDisplay">Loading...</div>
+      <button class="copy-btn" onclick="copyApiKey()">Copy</button>
+      <button class="copy-btn" onclick="toggleApiKey()" id="toggleApiKeyBtn">Show</button>
+    </div>
+    <div style="font-size:11px;color:var(--gray-500);margin-top:8px;">Use this key to access the public API. Keep it secret.</div>
+  </div>
+
+  <!-- REFER -->
+  <div class="refer-card">
+    <div class="section-title" style="margin-bottom:4px;">Refer &amp; Earn</div>
+    <div style="font-size:12px;color:var(--gray-400);margin-bottom:12px;">Invite friends and earn ₹10 when they recharge for the first time.</div>
+    <div class="refer-code-box">
+      <div class="refer-code" id="referCode">——</div>
+      <button class="copy-btn" onclick="copyRefer()">Copy</button>
+    </div>
+    <div class="refer-stats">
+      <div class="refer-stat"><div class="refer-stat-num" id="totalReferred">0</div><div class="refer-stat-label">Referred</div></div>
+      <div class="refer-stat"><div class="refer-stat-num">₹<span id="referEarned">0</span></div><div class="refer-stat-label">Earned</div></div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+  <button class="btn btn-danger" style="width:100%;justify-content:center;" onclick="doLogout()">Sign Out</button>
+</div>
+
+<!-- ===== API DOCS PAGE ===== -->
+<div class="page" id="page-api-docs">
+  <div style="margin-bottom:24px;">
+    <div class="section-title" style="font-size:22px;font-family:var(--font-display);letter-spacing:-0.02em;margin-bottom:4px;">API Documentation</div>
+    <div style="color:var(--gray-400);font-size:13px;">FlashOTP Hub Public API</div>
+  </div>
+  <div id="apiDocsContent">
+    <div class="empty"><div class="spinner"></div></div>
+  </div>
+</div>
+
+<!-- ===== ADMIN PAGE ===== -->
+<div class="page" id="page-admin">
+  <div style="margin-bottom:20px;">
+    <div class="section-title" style="font-size:22px;font-family:var(--font-display);letter-spacing:-0.02em;">Admin Panel</div>
+  </div>
+  <div class="admin-tabs">
+    <button class="admin-tab active" onclick="switchAdminTab('recharges')">Recharges</button>
+    <button class="admin-tab" onclick="switchAdminTab('users')">Users</button>
+    <button class="admin-tab" onclick="switchAdminTab('orders-admin')">Orders</button>
+    <button class="admin-tab" onclick="switchAdminTab('redeem')">Redeem Codes</button>
+    <button class="admin-tab" onclick="switchAdminTab('services-admin')">Services</button>
+    <button class="admin-tab" onclick="switchAdminTab('banners-admin')">Banners</button>
+    <button class="admin-tab" onclick="switchAdminTab('settings-admin')">Settings</button>
+  </div>
+
+  <!-- RECHARGES -->
+  <div class="admin-panel active" id="panel-recharges">
+    <div class="section-header" style="margin-bottom:16px;">
+      <div class="section-title">Pending Recharges</div>
+      <button class="btn btn-ghost btn-sm" onclick="loadAdminRecharges()">Refresh</button>
+    </div>
+    <div id="adminRechargesTable"><div class="empty"><div class="spinner"></div></div></div>
+  </div>
+
+  <!-- USERS -->
+  <div class="admin-panel" id="panel-users">
+    <div id="adminUsersTable"><div class="empty"><div class="spinner"></div></div></div>
+  </div>
+
+  <!-- ORDERS ADMIN -->
+  <div class="admin-panel" id="panel-orders-admin">
+    <div id="adminOrdersTable"><div class="empty"><div class="spinner"></div></div></div>
+  </div>
+
+  <!-- REDEEM CODES -->
+  <div class="admin-panel" id="panel-redeem">
+    <div class="glass-sm" style="padding:20px;margin-bottom:16px;">
+      <div class="section-title" style="margin-bottom:14px;">Create Redeem Codes</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">
+        <div><label class="form-label">Amount (₹)</label><input class="form-input" type="number" id="redeemAmount" placeholder="50"/></div>
+        <div><label class="form-label">Count</label><input class="form-input" type="number" id="redeemCount" placeholder="1" value="1"/></div>
+        <div><label class="form-label">Expires (days)</label><input class="form-input" type="number" id="redeemExpiry" placeholder="30"/></div>
+        <div><label class="form-label">Max Uses</label><input class="form-input" type="number" id="redeemMaxUses" placeholder="1"/></div>
+      </div>
+      <input class="form-input" type="text" id="redeemNote" placeholder="Note (optional)" style="margin-bottom:12px;"/>
+      <button class="btn btn-primary btn-sm" onclick="createRedeemCodes()">Generate Codes</button>
+    </div>
+    <div id="redeemCodesResult"></div>
+  </div>
+
+  <!-- SERVICES ADMIN -->
+  <div class="admin-panel" id="panel-services-admin">
+    <div class="glass-sm" style="padding:20px;margin-bottom:16px;">
+      <div class="section-title" style="margin-bottom:14px;">Add Service</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div><label class="form-label">Name</label><input class="form-input" id="svcName" placeholder="WhatsApp"/></div>
+        <div><label class="form-label">API Code</label><input class="form-input" id="svcApiCode" placeholder="wa"/></div>
+        <div><label class="form-label">Provider Code</label><input class="form-input" id="svcProvCode" placeholder="wa"/></div>
+        <div><label class="form-label">Price (₹)</label><input class="form-input" type="number" id="svcPrice" placeholder="5"/></div>
+        <div><label class="form-label">Provider Price (₹)</label><input class="form-input" type="number" id="svcProvPrice" placeholder="3"/></div>
+        <div><label class="form-label">Country Code</label><input class="form-input" id="svcCountry" placeholder="22"/></div>
+      </div>
+      <button class="btn btn-primary btn-sm" style="margin-top:12px;" onclick="addService()">Add Service</button>
+    </div>
+    <div id="servicesAdminList"><div class="empty"><div class="spinner"></div></div></div>
+  </div>
+
+  <!-- BANNERS ADMIN -->
+  <div class="admin-panel" id="panel-banners-admin">
+    <div class="glass-sm" style="padding:20px;margin-bottom:16px;">
+      <div class="section-title" style="margin-bottom:14px;">Add Banner</div>
+      <div><label class="form-label">Title</label><input class="form-input" id="bannerTitle" placeholder="Big Sale!" style="margin-bottom:10px;"/></div>
+      <div><label class="form-label">Subtitle</label><input class="form-input" id="bannerSubtitle" placeholder="Limited time offer" style="margin-bottom:10px;"/></div>
+      <div><label class="form-label">Link URL</label><input class="form-input" id="bannerLink" placeholder="https://" style="margin-bottom:10px;"/></div>
+      <div class="upload-zone" id="bannerUploadZone" style="margin-top:0;">
+        <input type="file" accept="image/*" id="bannerImageFile"/>
+        <div class="upload-icon">🖼️</div>
+        <div class="upload-text">Upload banner image</div>
+      </div>
+      <button class="btn btn-primary btn-sm" style="margin-top:12px;" onclick="addBanner()">Add Banner</button>
+    </div>
+    <div id="bannersAdminList"><div class="empty"><div class="spinner"></div></div></div>
+  </div>
+
+  <!-- SETTINGS ADMIN -->
+  <div class="admin-panel" id="panel-settings-admin">
+    <div class="glass-sm" style="padding:20px;">
+      <div class="section-title" style="margin-bottom:16px;">App Settings</div>
+      <div class="form-group"><label class="form-label">Refer Reward (₹)</label><input class="form-input" type="number" id="settingReferReward" placeholder="10"/></div>
+      <div class="form-group"><label class="form-label">Refer Min Recharge (₹)</label><input class="form-input" type="number" id="settingReferMin" placeholder="10"/></div>
+      <div class="form-group"><label class="form-label">Multi OTP Prices (comma separated)</label><input class="form-input" id="settingMultiOtp" placeholder="3,2,1,1"/></div>
+      <div class="form-group"><label class="form-label">UPI ID</label><input class="form-input" id="settingUpiId" placeholder="upi@bank"/></div>
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:14px;">
+        <input type="checkbox" id="settingMaintenance" style="width:16px;height:16px;accent-color:white;"/>
+        <label for="settingMaintenance" style="font-size:13px;">Maintenance Mode</label>
+      </div>
+      <button class="btn btn-primary btn-sm" onclick="saveSettings()">Save Settings</button>
+    </div>
+    <div id="adminSettingsResult" style="margin-top:12px;"></div>
+  </div>
+</div>
+
+</div><!-- /main -->
+
+<!-- ORDER MODAL -->
+<div class="modal-overlay" id="orderModal">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="orderModalTitle">Buy Number</div>
+      <button class="modal-close" onclick="closeModal('orderModal')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="modal-service-info">
+        <div class="modal-logo" id="orderModalLogo">📱</div>
+        <div>
+          <div class="modal-service-name" id="orderModalName">—</div>
+          <div class="modal-price" id="orderModalPrice">₹0.00</div>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Country</label>
+        <select class="form-select" id="orderCountry">
+          <option value="22">🇮🇳 India</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Operator</label>
+        <select class="form-select" id="orderOperator" onchange="updateOrderPriceForOperator()">
+          <option value="1">Operator-1 (Multi-SMS)</option>
+          <option value="2">Operator-2</option>
+          <option value="3">Operator-3</option>
+          <option value="4">Operator-4</option>
+          <option value="5">Operator-5</option>
+          <option value="6">Operator-6</option>
+          <option value="7">Operator-7</option>
+          <option value="8">Operator-8</option>
+          <option value="9">Operator-9</option>
+          <option value="10">Operator-10</option>
+          <option value="13">Operator-13 (Multi SMS)</option>
+        </select>
+      </div>
+      <div style="background:var(--gray-800);border-radius:var(--radius-sm);padding:12px;font-size:12px;color:var(--gray-400);margin-bottom:16px;">
+        ₹<span id="orderModalPriceConfirm">0.00</span> will be deducted from your wallet. Number valid for 10 minutes.
+      </div>
+      <button class="btn btn-primary" style="width:100%;justify-content:center;" id="buyBtn" onclick="confirmBuyNumber()">
+        Buy Number
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script>
+const API = 'https://flash-lumera.onrender.com';  // same origin; set to full URL if different e.g. 'https://flash-lumera.onrender.com'
+let currentUser = null;
+let accessToken = localStorage.getItem('access_token');
+let refreshToken = localStorage.getItem('refresh_token');
+let activeSlots = JSON.parse(localStorage.getItem('active_slots') || '[]');
+let pollTimers = {};
+let bannerTimer = null;
+let currentBanner = 0;
+let selectedService = null;
+let _apiKeyFull = '';
+let _apiKeyMasked = '';
+let _apiKeyShown = false;
+
+// ─────── UTILS ───────
+function showToast(msg, type='success') {
+  const w = document.getElementById('toastWrap');
+  const t = document.createElement('div');
+  t.className = `toast toast-${type}`;
+  t.textContent = msg;
+  w.appendChild(t);
+  setTimeout(() => { t.classList.add('removing'); setTimeout(() => t.remove(), 250); }, 3000);
+}
+
+function copyText(text, label='Copied') {
+  navigator.clipboard.writeText(text).then(() => showToast(label + ' copied!'));
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+async function apiFetch(path, opts={}) {
+  const headers = { 'Content-Type': 'application/json', ...(opts.headers || {}) };
+  if (accessToken) headers['Authorization'] = 'Bearer ' + accessToken;
+  const res = await fetch(API + path, { ...opts, headers });
+  if (res.status === 401 && refreshToken) {
+    const r = await fetch(API + '/api/auth/refresh', {
+      method:'POST', headers:{'Authorization':'Bearer '+refreshToken,'Content-Type':'application/json'}
+    });
+    if (r.ok) {
+      const d = await r.json();
+      accessToken = d.access_token;
+      localStorage.setItem('access_token', accessToken);
+      const res2 = await fetch(API + path, { ...opts, headers: { ...headers, 'Authorization': 'Bearer '+accessToken }});
+      return res2;
+    } else { doLogout(); }
+  }
+  return res;
+}
+
+async function formFetch(path, formData) {
+  const headers = {};
+  if (accessToken) headers['Authorization'] = 'Bearer ' + accessToken;
+  return fetch(API + path, { method:'POST', headers, body: formData });
+}
+
+// ─────── PAGES ───────
+function showPage(name) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + name).classList.add('active');
+  document.querySelectorAll('.nav-links button').forEach((b,i) => {
+    const pages = ['home','orders','wallet','profile','api-docs','admin'];
+    b.classList.toggle('active', pages[i] === name);
+  });
+  document.querySelectorAll('.mobile-nav-btn').forEach((b,i) => {
+    const pages = ['home','orders','wallet','profile'];
+    b.classList.toggle('active', pages[i] === name);
+  });
+  if (name === 'home') { loadServices(); renderSlots(); }
+  if (name === 'buy') { loadBuyPage(); }
+  if (name === 'wallet') { loadWalletPage(); }
+  if (name === 'orders') { loadOrderHistory(); }
+  if (name === 'profile') { renderProfile(); }
+  if (name === 'api-docs') { loadApiDocs(); }
+  if (name === 'admin') { loadAdminRecharges(); loadAdminServices(); loadAdminSettings(); }
+}
+
+function requireAuth() {
+  if (!currentUser) { showPage('auth'); return false; }
+  return true;
+}
+
+// ─────── AUTH ───────
+function switchAuthTab(tab) {
+  ['login','signup','forgot'].forEach(t => {
+    document.getElementById(t+'Form').style.display = t===tab?'':'none';
+  });
+  document.querySelectorAll('.auth-tab').forEach((el,i) => {
+    el.classList.toggle('active', ['login','signup'].indexOf(tab) === i);
+  });
+}
+
+async function sendOtp(purpose) {
+  const emailMap = {login:'loginEmail',signup:'signupEmail',forgot:'forgotEmail'};
+  const btnMap = {login:'sendLoginOtpBtn',signup:'sendSignupOtpBtn',forgot:'sendForgotOtpBtn'};
+  const email = document.getElementById(emailMap[purpose]).value.trim();
+  if (!email) { showToast('Enter email first','error'); return; }
+  const btn = document.getElementById(btnMap[purpose]);
+  btn.disabled = true; btn.textContent = 'Sending...';
+  try {
+    const res = await fetch(API+'/api/auth/send-otp', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({email,purpose})
+    });
+    const d = await res.json();
+    if (res.ok) { showToast('OTP sent to '+email); startOtpCooldown(btn); }
+    else { showToast(d.error||'Failed','error'); btn.disabled=false; btn.textContent='Send OTP'; }
+  } catch { showToast('Network error','error'); btn.disabled=false; btn.textContent='Send OTP'; }
+}
+
+function startOtpCooldown(btn) {
+  let s = 60;
+  btn.textContent = s+'s';
+  const t = setInterval(() => {
+    s--;
+    if (s<=0) { clearInterval(t); btn.disabled=false; btn.textContent='Resend'; }
+    else btn.textContent = s+'s';
+  }, 1000);
+}
+
+async function doLogin() {
+  const email = document.getElementById('loginEmail').value.trim();
+  const password = document.getElementById('loginPassword').value;
+  const otp = document.getElementById('loginOtp').value.trim();
+  if (!email) { showToast('Enter email','error'); return; }
+  const btn = document.querySelector('#loginForm .btn-primary');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Signing in...';
+  const res = await fetch(API+'/api/auth/login', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({email,password,otp})
+  });
+  const d = await res.json();
+  if (res.ok) {
+    accessToken = d.access_token; refreshToken = d.refresh_token;
+    localStorage.setItem('access_token',accessToken);
+    localStorage.setItem('refresh_token',refreshToken);
+    currentUser = d.user;
+    updateNavUser();
+    showPage('home');
+    showToast('Welcome back, '+d.user.name+'!');
+  } else { showToast(d.error||'Login failed','error'); btn.disabled=false; btn.innerHTML='Sign In'; }
+}
+
+async function doSignup() {
+  const name = document.getElementById('signupName').value.trim();
+  const email = document.getElementById('signupEmail').value.trim();
+  const otp = document.getElementById('signupOtp').value.trim();
+  const password = document.getElementById('signupPassword').value;
+  const refer_code = document.getElementById('signupRefer').value.trim().toUpperCase();
+  if (!name||!email||!otp||!password) { showToast('All fields required','error'); return; }
+  const btn = document.querySelector('#signupForm .btn-primary');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Creating...';
+  const res = await fetch(API+'/api/auth/signup', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({name,email,otp,password,refer_code})
+  });
+  const d = await res.json();
+  if (res.ok) {
+    accessToken = d.access_token; refreshToken = d.refresh_token;
+    localStorage.setItem('access_token',accessToken);
+    localStorage.setItem('refresh_token',refreshToken);
+    currentUser = d.user;
+    updateNavUser();
+    showPage('home');
+    showToast('Account created! Welcome 🎉');
+  } else { showToast(d.error||'Signup failed','error'); btn.disabled=false; btn.innerHTML='Create Account'; }
+}
+
+async function doForgotPassword() {
+  const email = document.getElementById('forgotEmail').value.trim();
+  const otp = document.getElementById('forgotOtp').value.trim();
+  const new_password = document.getElementById('forgotNewPw').value;
+  if (!email||!otp||!new_password) { showToast('All fields required','error'); return; }
+  const btn = document.querySelector('#forgotForm .btn-primary');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Resetting...';
+  const res = await fetch(API+'/api/auth/forgot-password', {
+    method:'POST', headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({email,otp,new_password})
+  });
+  const d = await res.json();
+  if (res.ok) { showToast('Password updated! Please sign in.'); switchAuthTab('login'); }
+  else showToast(d.error||'Failed','error'); btn.disabled=false; btn.innerHTML='Reset Password';
+}
+
+function doLogout() {
+  currentUser = null; accessToken = null; refreshToken = null;
+  localStorage.removeItem('access_token'); localStorage.removeItem('refresh_token');
+  localStorage.removeItem('active_slots');
+  activeSlots = [];
+  Object.values(pollTimers).forEach(clearInterval);
+  pollTimers = {};
+  updateNavUser();
+  showPage('home');
+  showToast('Signed out');
+}
+
+async function tryAutoLogin() {
+  if (!accessToken) return;
+  try {
+    const res = await apiFetch('/api/user/profile');
+    if (res.ok) {
+      const d = await res.json();
+      currentUser = d;
+      updateNavUser();
+    }
+  } catch {}
+}
+
+function updateNavUser() {
+  const nav = document.getElementById('navAvatar');
+  const bal = document.getElementById('navBalance');
+  const loginBtn = document.getElementById('loginNavBtn');
+  const adminBtn = document.getElementById('adminNavBtn');
+  if (currentUser) {
+    nav.style.display='flex';
+    nav.textContent = (currentUser.name||'U')[0].toUpperCase();
+    bal.style.display='block';
+    bal.textContent = '₹'+(currentUser.wallet_balance||0).toFixed(2);
+    loginBtn.style.display='none';
+    adminBtn.style.display = currentUser.is_admin?'':'none';
+  } else {
+    nav.style.display='none';
+    bal.style.display='none';
+    loginBtn.style.display='';
+    adminBtn.style.display='none';
+  }
+}
+
+// ─────── BUY PAGE ───────
+let _allServices = [];
+
+async function loadBuyPage() {
+  document.getElementById('buySearchInput').value = '';
+  if (_allServices.length) { renderBuyServices(_allServices); return; }
+  document.getElementById('buyServicesGrid').innerHTML = '<div class="empty"><div class="spinner"></div></div>';
+  try {
+    const res = await fetch(API + '/api/user/services');
+    if (!res.ok) return;
+    _allServices = await res.json();
+    renderBuyServices(_allServices);
+  } catch {}
+}
+
+function filterBuyServices(query) {
+  const q = query.trim().toLowerCase();
+  const filtered = q
+    ? _allServices.filter(s => s.name.toLowerCase().includes(q) || (s.api_code||'').toLowerCase().includes(q))
+    : _allServices;
+  renderBuyServices(filtered, q);
+}
+
+function renderBuyServices(list, query='') {
+  const grid = document.getElementById('buyServicesGrid');
+  const countEl = document.getElementById('buyResultCount');
+  countEl.textContent = query
+    ? `${list.length} result${list.length !== 1 ? 's' : ''} for "${query}"`
+    : `${list.length} services available`;
+  if (!list.length) {
+    grid.innerHTML = '<div class="empty"><div class="empty-icon">🔍</div><div class="empty-text">No services found</div></div>';
+    return;
+  }
+  grid.innerHTML = list.map(s => `
+    <div class="service-card" onclick="openBuyModal('${s._id}','${escape(s.name)}','${s.price}','${s.logo_url||''}')">
+      <div class="service-logo">${s.logo_url ? `<img src="${s.logo_url}" alt="${s.name}" onerror="this.style.display='none'"/>` : '📱'}</div>
+      <div class="service-name">${s.name}</div>
+      <div class="service-price">₹${parseFloat(s.price).toFixed(2)}</div>
+      <div class="service-code">${s.api_code || s._id}</div>
+    </div>`).join('');
+}
+
+// ─────── SERVICES ───────
+async function loadServices() {
+  try {
+    const res = await fetch(API+'/api/user/services');
+    if (!res.ok) return;
+    const services = await res.json();
+    _allServices = services;
+    const grid = document.getElementById('servicesGrid');
+    document.getElementById('statServices').textContent = services.length;
+    document.getElementById('servicesCount').textContent = services.length + ' available';
+    if (!services.length) { grid.innerHTML='<div class="empty"><div class="empty-icon">📱</div><div class="empty-text">No services available</div></div>'; return; }
+    grid.innerHTML = services.map(s => `
+      <div class="service-card" onclick="openBuyModal('${s._id}','${escape(s.name)}','${s.price}','${s.logo_url||''}')">
+        <div class="service-logo">${s.logo_url?`<img src="${s.logo_url}" alt="${s.name}" onerror="this.style.display='none'"/>`:'📱'}</div>
+        <div class="service-name">${s.name}</div>
+        <div class="service-price">₹${parseFloat(s.price).toFixed(2)}</div>
+        <div class="service-code">${s.api_code||s._id}</div>
+      </div>`).join('');
+  } catch(e) { console.error(e); }
+}
+
+function scrollToServices() {
+  document.getElementById('servicesSection').scrollIntoView({behavior:'smooth'});
+}
+
+// ─────── BUY MODAL ───────
+
+  function openBuyModal(id, name, price, logo) {
+  if (!requireAuth()) return;
+  const svc = _allServices.find(s => s._id === id);
+  selectedService = {id, name: unescape(name), price, logo, operator_prices: (svc && svc.operator_prices) || {}};
+  document.getElementById('orderModalTitle').textContent = 'Buy Number';
+  document.getElementById('orderModalName').textContent = unescape(name);
+  const logoEl = document.getElementById('orderModalLogo');
+  logoEl.innerHTML = logo ? `<img src="${logo}" style="width:100%;height:100%;object-fit:cover;border-radius:10px;" onerror="this.parentElement.textContent='📱'"/>` : '📱';
+  document.getElementById('buyBtn').disabled = false;
+  document.getElementById('buyBtn').innerHTML = 'Buy Number';
+  document.getElementById('orderOperator').value = '1';
+  updateOrderPriceForOperator();
+  document.getElementById('orderModal').classList.add('open');
+}
+
+function updateOrderPriceForOperator() {
+  if (!selectedService) return;
+  const op = document.getElementById('orderOperator').value;
+  const price = (selectedService.operator_prices && selectedService.operator_prices[op] != null)
+    ? selectedService.operator_prices[op]
+    : selectedService.price;
+  document.getElementById('orderModalPrice').textContent = '₹' + parseFloat(price).toFixed(2);
+  document.getElementById('orderModalPriceConfirm').textContent = parseFloat(price).toFixed(2);
+  selectedService._currentPrice = parseFloat(price);
+}
+
+async function confirmBuyNumber() {
+  if (!selectedService) return;
+  const btn = document.getElementById('buyBtn');
+  btn.disabled = true; btn.innerHTML = '<span class="spinner"></span> Buying...';
+  try {
+    const res = await apiFetch('/api/orders/create', {
+      method:'POST',
+      body: JSON.stringify({
+        service_id: selectedService.id,
+        country: document.getElementById('orderCountry').value,
+        operator: document.getElementById('orderOperator').value
+      })
+    });
+    const d = await res.json();
+    if (res.ok) {
+      closeModal('orderModal');
+      showToast('Number allocated: +91'+d.number.replace(/\D/g,'').slice(-10));
+      // save slot
+      const slot = { order_id:d.order_id, number:d.number, service:d.service,
+        logo: selectedService.logo, price:d.price, status:'pending',
+        expires_at:d.expires_at, can_cancel_at:d.can_cancel_at,
+        otp_received:null, otp_list:[], otp_count:0 };
+      activeSlots.unshift(slot);
+      saveSlots();
+      renderSlots();
+      renderOrdersActiveSlots();
+      startPoll(d.order_id);
+      // update wallet
+      if (currentUser) {
+        currentUser.wallet_balance = Math.max(0, (currentUser.wallet_balance||0) - parseFloat(d.price));
+        updateNavUser();
+      }
+      // redirect to orders page so user sees the active number + OTP
+      showPage('orders');
+    } else { showToast(d.error||'Failed to buy','error'); btn.disabled=false; btn.innerHTML='Buy Number'; }
+  } catch { showToast('Network error','error'); btn.disabled=false; btn.innerHTML='Buy Number'; }
+}
+
+// ─────── SLOTS ───────
+function saveSlots() {
+  localStorage.setItem('active_slots', JSON.stringify(activeSlots));
+}
+
+function renderSlots() {
+  const active = activeSlots.filter(s => s.status === 'pending' || s.status === 'success');
+  const sec = document.getElementById('activeSlotsSection');
+  sec.style.display = active.length ? '' : 'none';
+  document.getElementById('activeSlotCount').textContent = active.length + ' active';
+  const list = document.getElementById('slotsList');
+  if (!active.length) { list.innerHTML=''; return; }
+  list.innerHTML = active.map(s => renderSlotCard(s)).join('');
+  // start timers for progress bars
+  active.forEach(s => updateSlotTimer(s.order_id));
+}
+
+function renderSlotCard(s, prefix='slot') {
+  const expires = new Date(s.expires_at);
+  const now = new Date();
+  const total = 600;
+  const left = Math.max(0, Math.floor((expires - now) / 1000));
+  const pct = Math.min(100, (left/total)*100);
+  const statusHtml = s.status === 'pending'
+    ? `<span class="slot-status pending"><span class="blink"></span> Waiting</span>`
+    : `<span class="slot-status success">✓ OTP received</span>`;
+
+  const otpSection = s.status === 'success' && s.otp_received ? `
+    <div class="otp-box">
+      <div>
+        <div class="otp-val">${s.otp_received}</div>
+        <div class="otp-sms">${(s.full_sms||'').substring(0,80)}</div>
+      </div>
+      <button class="copy-btn" onclick="copyText('${s.otp_received}','OTP')">Copy</button>
+    </div>
+    ${s.otp_list && s.otp_list.length > 1 ? `
+    <div style="margin-top:8px;">
+      ${s.otp_list.map((o,i)=>`<div class="otp-list-item"><span class="otp-idx">#${i+1}</span><span style="font-family:var(--font-mono);font-size:12px;flex:1">${o.otp}</span><button class="copy-btn" onclick="copyText('${o.otp}','OTP')">Copy</button></div>`).join('')}
+    </div>` : ''}` : '';
+
+  const actionsHtml = `
+    <div class="slot-actions">
+      ${s.status === 'success' ? `<button class="btn btn-ghost btn-sm" onclick="requestNextOtp('${s.order_id}')">Next OTP +₹${getNextOtpPrice(s)}</button>` : ''}
+      ${s.status === 'pending' ? `<button class="btn btn-ghost btn-sm" style="opacity:0.5" disabled>Waiting for OTP...</button>` : ''}
+      <button class="btn btn-danger btn-sm" onclick="cancelSlot('${s.order_id}')">Cancel</button>
+    </div>
+    <div class="slot-timer" id="timer-${prefix}-${s.order_id}">${formatTime(left)}</div>
+    <div class="progress-bar"><div class="progress-fill" id="prog-${prefix}-${s.order_id}" style="width:${pct}%"></div></div>
+  `;
+  return `
+    <div class="slot-card ${s.status}" id="${prefix}-${s.order_id}">
+      <div class="slot-top">
+        <div class="slot-info">
+          <div class="slot-icon">${s.logo ? `<img src="${s.logo}" onerror="this.style.display='none'"/>` : '📱'}</div>
+          <div>
+            <div class="slot-service">${s.service}</div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <div class="slot-number">${s.number}</div>
+              <button class="copy-btn" onclick="copyText('${s.number}','Number')">Copy</button>
+            </div>
+          </div>
+        </div>
+        ${statusHtml}
+      </div>
+      ${otpSection}
+      ${actionsHtml}
+    </div>`;
+}
+
+function getNextOtpPrice(s) {
+  const prices = [3,2,1,1];
+  const idx = (s.otp_count||1)-1;
+  return prices[idx] !== undefined ? prices[idx] : 1;
+}
+
+function formatTime(sec) {
+  const m = Math.floor(sec/60); const s = sec%60;
+  return `${m}:${String(s).padStart(2,'0')} left`;
+}
+
+function updateSlotTimer(orderId) {
+  const s = activeSlots.find(x=>x.order_id===orderId);
+  if (!s) return;
+  const expires = new Date(s.expires_at);
+  const now = new Date();
+  const left = Math.max(0, Math.floor((expires-now)/1000));
+  const pct = Math.min(100,(left/600)*100);
+  ['slot','oslot'].forEach(prefix=>{
+    const timerEl = document.getElementById('timer-'+prefix+'-'+orderId);
+    const progEl = document.getElementById('prog-'+prefix+'-'+orderId);
+    if (!timerEl) return;
+    timerEl.textContent = left>0 ? formatTime(left) : 'Expired';
+    if (progEl) progEl.style.width = pct+'%';
+  });
+  if (left<=0) { s.status='expired'; saveSlots(); renderSlots(); renderOrdersActiveSlots(); }
+}
+
+function startPoll(orderId) {
+  if (pollTimers[orderId]) clearInterval(pollTimers[orderId]);
+  pollTimers[orderId] = setInterval(() => pollOrder(orderId), 3000);
+}
+
+async function pollOrder(orderId) {
+  try {
+    const res = await apiFetch('/api/orders/'+orderId+'/poll');
+    if (!res.ok) return;
+    const d = await res.json();
+    const slot = activeSlots.find(s=>s.order_id===orderId);
+    if (!slot) { clearInterval(pollTimers[orderId]); return; }
+    slot.status = d.status;
+    slot.otp_received = d.otp_received;
+    slot.full_sms = d.full_sms;
+    slot.otp_list = d.otp_list||[];
+    slot.otp_count = d.otp_count||0;
+    saveSlots();
+    // update timer
+    updateSlotTimer(orderId);
+    // re-render if status changed
+    ['slot','oslot'].forEach(prefix=>{
+      const el = document.getElementById(prefix+'-'+orderId);
+      if (el) el.outerHTML = renderSlotCard(slot, prefix);
+    });
+    if (d.status === 'success' && !slot._notified) {
+      slot._notified = true;
+      showToast('OTP received for '+slot.service+': '+d.otp_received);
+    }
+    if (d.status === 'success' || d.status === 'cancelled' || d.status === 'expired' || d.expired) {
+      clearInterval(pollTimers[orderId]);
+      if (d.status !== 'success') {
+        setTimeout(() => {
+          activeSlots = activeSlots.filter(s=>s.order_id!==orderId);
+          saveSlots(); renderSlots(); renderOrdersActiveSlots();
+        }, d.status === 'success' ? 300000 : 5000);
+      }
+      if (currentUser) { const r=await apiFetch('/api/user/profile'); if(r.ok){const u=await r.json();currentUser=u;updateNavUser();}}
+    }
+  } catch {}
+}
+
+async function cancelSlot(orderId) {
+  const slot = activeSlots.find(s=>s.order_id===orderId);
+  if (!slot) return;
+  try {
+    const res = await apiFetch('/api/orders/'+orderId+'/cancel', {method:'POST'});
+    const d = await res.json();
+    if (res.ok) {
+      showToast(d.refund>0 ? `Cancelled. ₹${d.refund} refunded.` : 'Cancelled. No refund.');
+      clearInterval(pollTimers[orderId]);
+      activeSlots = activeSlots.filter(s=>s.order_id!==orderId);
+      saveSlots(); renderSlots(); renderOrdersActiveSlots();
+      if (currentUser) { const r=await apiFetch('/api/user/profile'); if(r.ok){const u=await r.json();currentUser=u;updateNavUser();}}
+    } else showToast(d.error||'Cannot cancel yet','error');
+  } catch { showToast('Network error','error'); }
+}
+
+async function requestNextOtp(orderId) {
+  try {
+    const res = await apiFetch('/api/orders/'+orderId+'/next-otp', {method:'POST'});
+    const d = await res.json();
+    if (res.ok) {
+      showToast('Waiting for next OTP...');
+      const slot = activeSlots.find(s=>s.order_id===orderId);
+      if (slot) { slot.status='pending'; saveSlots(); renderSlots(); renderOrdersActiveSlots(); }
+      startPoll(orderId);
+    } else showToast(d.error||'Failed','error');
+  } catch { showToast('Network error','error'); }
+}
+
+// ─────── BANNERS ───────
+async function loadBanners() {
+  try {
+    const res = await fetch(API+'/api/user/banners');
+    if (!res.ok) return;
+    const banners = await res.json();
+    if (!banners.length) return;
+    const section = document.getElementById('bannerSection');
+    section.style.display='';
+    const slides = document.getElementById('bannerSlides');
+    const dots = document.getElementById('bannerDots');
+    slides.innerHTML = banners.map(b=>`
+      <div class="banner-slide">
+        ${b.image_url?`<img src="${b.image_url}" alt="${b.title}"/>`:''}
+        <div class="banner-content">
+          <div class="banner-tag">Flash OTP Hub</div>
+          <div class="banner-title">${b.title}</div>
+          ${b.subtitle?`<div class="banner-sub">${b.subtitle}</div>`:''}
+        </div>
+      </div>`).join('');
+    dots.innerHTML = banners.map((_,i)=>`<div class="banner-dot${i===0?' active':''}" onclick="goBanner(${i})"></div>`).join('');
+    if (banners.length>1) {
+      bannerTimer = setInterval(()=>{ currentBanner=(currentBanner+1)%banners.length; goBanner(currentBanner); },4000);
+    }
+  } catch {}
+}
+
+function goBanner(idx) {
+  currentBanner = idx;
+  document.getElementById('bannerSlides').style.transform = `translateX(-${idx*100}%)`;
+  document.querySelectorAll('.banner-dot').forEach((d,i)=>d.classList.toggle('active',i===idx));
+}
+
+// ─────── WALLET ───────
+async function loadWalletPage() {
+  if (!requireAuth()) return;
+  // load UPI info
+  try {
+    const r = await fetch(API+'/api/payment/upi-details');
+    if (r.ok) {
+      const d = await r.json();
+      document.getElementById('upiInfo').textContent = `Pay to UPI ID: ${d.upi_id}`;
+    }
+  } catch {}
+  // load user balance
+  try {
+    const r = await apiFetch('/api/user/profile');
+    if (r.ok) { const d=await r.json(); currentUser=d; updateNavUser();
+      document.getElementById('walletBal').textContent=(d.wallet_balance||0).toFixed(2);
+    }
+  } catch {}
+  // load transactions
+  loadTransactions();
+  // load recharge history for total
+  try {
+    const r = await apiFetch('/api/payment/history');
+    if (r.ok) {
+      const reqs = await r.json();
+      const approved = reqs.filter(x=>x.status==='approved').reduce((a,x)=>a+parseFloat(x.amount),0);
+      document.getElementById('walletTotal').textContent = approved.toFixed(2);
+    }
+  } catch {}
+}
+
+async function loadTransactions() {
+  const el = document.getElementById('txnList');
+  try {
+    const r = await apiFetch('/api/user/transactions');
+    if (!r.ok) { el.innerHTML='<div class="empty"><div class="empty-text">Could not load</div></div>'; return; }
+    const txns = await r.json();
+    document.getElementById('txnCount').textContent = txns.length + ' transactions';
+    if (!txns.length) { el.innerHTML='<div class="empty"><div class="empty-icon">💸</div><div class="empty-text">No transactions yet</div></div>'; return; }
+    el.innerHTML='<div class="txn-list">'+txns.map(t=>`
+      <div class="txn-item">
+        <div class="txn-left">
+          <div class="txn-icon">${t.type==='credit'?'↑':'↓'}</div>
+          <div>
+            <div class="txn-desc">${t.description||'Transaction'}</div>
+            <div class="txn-date">${new Date(t.created_at).toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'})}</div>
+          </div>
+        </div>
+        <div class="txn-amount ${t.type}">${t.type==='credit'?'+':'-'}₹${parseFloat(t.amount).toFixed(2)}</div>
+      </div>`).join('')+'</div>';
+  } catch { el.innerHTML='<div class="empty"><div class="empty-text">Failed to load</div></div>'; }
+}
+
+function setAmount(amt) {
+  document.getElementById('rechargeAmount').value = amt;
+  document.querySelectorAll('.amount-pill').forEach(p=>p.classList.toggle('active',p.textContent==='₹'+amt));
+}
+
+function previewScreenshot(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const prev = document.getElementById('uploadPreview');
+  prev.src = URL.createObjectURL(file);
+  prev.style.display = 'block';
+  document.querySelector('.upload-text').textContent = file.name;
+}
+
+async function submitRecharge() {
+  if (!requireAuth()) return;
+  const amount = document.getElementById('rechargeAmount').value;
+  const file = document.getElementById('screenshotFile').files[0];
+  if (!amount) { showToast('Enter amount','error'); return; }
+  if (!file) { showToast('Upload screenshot','error'); return; }
+  const fd = new FormData();
+  fd.append('amount', amount);
+  fd.append('screenshot', file);
+  try {
+    const res = await formFetch('/api/payment/recharge', fd);
+    const d = await res.json();
+    if (res.ok) { showToast('Recharge request submitted! Admin will approve shortly.'); }
+    else showToast(d.error||'Failed','error');
+  } catch { showToast('Network error','error'); }
+}
+
+function formatRedeemCode(el) {
+  let v = el.value.replace(/[^A-Z0-9]/gi,'').toUpperCase();
+  if (v.length>4) v = v.slice(0,4)+'-'+v.slice(4);
+  if (v.length>9) v = v.slice(0,9)+'-'+v.slice(9);
+  el.value = v.slice(0,14);
+}
+
+async function doRedeem() {
+  if (!requireAuth()) return;
+  const code = document.getElementById('redeemCodeInput').value.trim();
+  if (!code) { showToast('Enter a code','error'); return; }
+  const res = await apiFetch('/api/payment/redeem', {method:'POST',body:JSON.stringify({code})});
+  const d = await res.json();
+  if (res.ok) {
+    showToast(d.message);
+    document.getElementById('redeemCodeInput').value='';
+    if (currentUser) { currentUser.wallet_balance=(currentUser.wallet_balance||0)+d.amount; updateNavUser(); }
+    document.getElementById('walletBal').textContent=(currentUser?.wallet_balance||0).toFixed(2);
+    loadTransactions();
+  } else showToast(d.error||'Invalid code','error');
+}
+
+// ─────── ORDERS HISTORY ───────
+
+  
+  function renderOrdersActiveSlots() {
+  const active = activeSlots.filter(s => s.status === 'pending' || s.status === 'success');
+  const sec = document.getElementById('ordersActiveSection');
+  if (!sec) return;
+  sec.style.display = active.length ? '' : 'none';
+  document.getElementById('ordersActiveCount').textContent = active.length + ' active';
+  const list = document.getElementById('ordersActiveSlotsList');
+  list.innerHTML = active.map(s => renderSlotCard(s, 'oslot')).join('');
+  active.forEach(s => updateSlotTimer(s.order_id));
+}
+
+async function loadOrderHistory() {
+  if (!requireAuth()) return;
+  const el = document.getElementById('ordersList');
+  el.innerHTML = '<div class="empty"><div class="spinner"></div></div>';
+  try {
+    const r = await apiFetch('/api/user/orders?limit=50');
+    if (!r.ok) { el.innerHTML='<div class="empty"><div class="empty-text">Failed to load</div></div>'; return; }
+    const data = await r.json();
+    const orders = data.orders || [];
+
+    // merge live (pending/success) orders into activeSlots so they get OTP polling + cancel
+    orders.filter(o => o.status === 'pending' || o.status === 'success').forEach(o => {
+      let slot = activeSlots.find(s => s.order_id === o._id);
+      if (!slot) {
+        slot = {
+          order_id: o._id, number: o.number, service: o.service_name,
+          logo: o.service_logo, price: o.price, status: o.status,
+          expires_at: o.expires_at, can_cancel_at: o.can_cancel_at,
+          otp_received: o.otp_received, full_sms: o.full_sms,
+          otp_list: o.otp_list || [], otp_count: o.otp_count || 0
+        };
+        activeSlots.unshift(slot);
+      }
+      if (o.status === 'pending' && !pollTimers[o._id]) startPoll(o._id);
+    });
+    saveSlots();
+    renderSlots();
+    renderOrdersActiveSlots();
+
+    const activeIds = new Set(activeSlots.filter(s=>s.status==='pending'||s.status==='success').map(s=>s.order_id));
+    const history = orders.filter(o => !activeIds.has(o._id));
+
+    if (!history.length) { el.innerHTML='<div class="empty"><div class="empty-icon">📋</div><div class="empty-text">No past orders yet</div></div>'; return; }
+    el.innerHTML = history.map(o=>`
+      <div class="order-card">
+        <div class="order-icon">${o.service_logo?`<img src="${o.service_logo}" onerror="this.style.display='none'"/>`:'📱'}</div>
+        <div class="order-info">
+          <div class="order-service">${o.service_name}</div>
+          <div class="order-meta">${o.number} · ${new Date(o.created_at).toLocaleDateString('en-IN')}</div>
+        </div>
+        <div class="order-right">
+          <div class="order-otp">${o.otp_received||badgeFor(o.status)}</div>
+          <div class="order-price">₹${parseFloat(o.price).toFixed(2)}</div>
+          <button class="btn btn-ghost btn-sm" style="margin-top:6px;" onclick="openBuyModal('${o.service_id}','${escape(o.service_name)}','${o.price}','${o.service_logo||''}')">Buy Again</button>
+        </div>
+      </div>`).join('');
+  } catch { el.innerHTML='<div class="empty"><div class="empty-text">Network error</div></div>'; }
+}
+
+function badgeFor(status) {
+  const map={pending:'⏳',cancelled:'✗',expired:'⌛',success:'?'};
+  return map[status]||status;
+}
+
+// ─────── PROFILE ───────
+async function renderProfile() {
+  if (!requireAuth()) return;
+  try {
+    const r = await apiFetch('/api/user/profile');
+    if (r.ok) { const d=await r.json(); currentUser=d; updateNavUser(); }
+  } catch {}
+  if (!currentUser) return;
+  const u = currentUser;
+  document.getElementById('profileName').textContent = u.name;
+  document.getElementById('profileEmail').textContent = u.email;
+  document.getElementById('profileAvatar').textContent = (u.name||'U')[0].toUpperCase();
+  document.getElementById('profileBalance').textContent = (u.wallet_balance||0).toFixed(2);
+  document.getElementById('profileBadge').textContent = u.is_admin?'Admin':'Member';
+  document.getElementById('referCode').textContent = u.refer_code||'——';
+  document.getElementById('totalReferred').textContent = u.total_referred||0;
+  document.getElementById('referEarned').textContent = ((u.total_referred||0)*10).toFixed(0);
+  const joined = u.created_at ? new Date(u.created_at).toLocaleDateString('en-IN',{month:'short',year:'numeric'}) : '—';
+  document.getElementById('profileJoined').textContent = joined;
+  // API key
+  _apiKeyFull = u.api_key||'';
+  _apiKeyMasked = _apiKeyFull ? _apiKeyFull.slice(0,7)+'••••••••••••••••••••••••'+_apiKeyFull.slice(-6) : 'Not set';
+  document.getElementById('apiKeyDisplay').textContent = _apiKeyMasked;
+  _apiKeyShown = false;
+  document.getElementById('toggleApiKeyBtn').textContent = 'Show';
+}
+
+function toggleApiKey() {
+  _apiKeyShown = !_apiKeyShown;
+  document.getElementById('apiKeyDisplay').textContent = _apiKeyShown ? _apiKeyFull : _apiKeyMasked;
+  document.getElementById('toggleApiKeyBtn').textContent = _apiKeyShown ? 'Hide' : 'Show';
+}
+
+function copyApiKey() { copyText(_apiKeyFull,'API key'); }
+function copyRefer() { copyText(currentUser?.refer_code||'','Referral code'); }
+
+// ─────── API DOCS ───────
+async function loadApiDocs() {
+  const el = document.getElementById('apiDocsContent');
+  try {
+    const res = await fetch(API+'/api/api-docs');
+    if (!res.ok) throw new Error();
+    const d = await res.json();
+    el.innerHTML = `
+      <div class="glass-sm" style="padding:20px;margin-bottom:16px;">
+        <div style="font-size:11px;color:var(--gray-500);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:6px;">Base URL</div>
+        <div style="font-family:var(--font-mono);font-size:12px;color:var(--gray-200);word-break:break-all;">${d.base_url}</div>
+        <div style="margin-top:12px;font-size:12px;color:var(--gray-400);">Authenticate via <code style="font-family:var(--font-mono);background:var(--gray-800);padding:1px 6px;border-radius:4px;">?api_key=YOUR_KEY</code> on every request</div>
+        <div style="margin-top:6px;font-size:12px;color:var(--gray-400);">Rate limit: <strong>${d.rate_limit?.global||''}</strong></div>
+      </div>
+      <div style="margin-bottom:12px;font-size:11px;color:var(--gray-500);text-transform:uppercase;letter-spacing:0.1em;">Endpoints</div>
+      ${d.endpoints.map(ep=>`
+        <div class="api-endpoint">
+          <div class="api-ep-header" onclick="toggleApiEndpoint(this)">
+            <span class="api-method">GET</span>
+            <span class="api-ep-title">${ep.title}</span>
+            <span style="margin-left:auto;color:var(--gray-500);font-size:11px;">▾</span>
+          </div>
+          <div class="api-ep-body">
+            <div class="api-url">${ep.url}</div>
+            <div style="font-size:11px;color:var(--gray-500);margin-bottom:4px;">Response</div>
+            <div class="api-response">${Array.isArray(ep.success)?ep.success.join('<br/>'):ep.success}</div>
+            ${ep.errors?`<div style="font-size:11px;color:var(--gray-500);margin-top:8px;margin-bottom:4px;">Errors</div><div class="api-response" style="color:#ff9999;">${ep.errors.join('<br/>')}</div>`:''}
+          </div>
+        </div>`).join('')}
+      <div style="margin-top:16px;font-size:11px;color:var(--gray-500);text-transform:uppercase;letter-spacing:0.1em;margin-bottom:8px;">Reference</div>
+      <div class="glass-sm" style="padding:16px;">
+        <div style="font-size:12px;color:var(--gray-400);">Countries: <span style="font-family:var(--font-mono);">${d.reference?.countries?.items?.map(c=>c.name+' ('+c.code+')').join(', ')}</span></div>
+      </div>
+    `;
+  } catch { el.innerHTML='<div class="empty"><div class="empty-text">Could not load API docs</div></div>'; }
+}
+
+function toggleApiEndpoint(header) {
+  const body = header.nextElementSibling;
+  body.classList.toggle('open');
+}
+
+// ─────── ADMIN ───────
+function switchAdminTab(name) {
+  document.querySelectorAll('.admin-tab').forEach((t,i)=>{
+    const tabs=['recharges','users','orders-admin','redeem','services-admin','banners-admin','settings-admin'];
+    t.classList.toggle('active',tabs[i]===name);
+  });
+  document.querySelectorAll('.admin-panel').forEach(p=>p.classList.remove('active'));
+  document.getElementById('panel-'+name).classList.add('active');
+  if (name==='users') loadAdminUsers();
+  if (name==='orders-admin') loadAdminOrders();
+  if (name==='banners-admin') loadAdminBanners();
+}
+
+async function loadAdminRecharges() {
+  const el = document.getElementById('adminRechargesTable');
+  el.innerHTML = '<div class="empty"><div class="spinner"></div></div>';
+  try {
+    const r = await apiFetch('/api/admin/recharge-requests?status=pending&limit=50');
+    if (!r.ok) { el.innerHTML='<div class="empty"><div class="empty-text">Unauthorized</div></div>'; return; }
+    const rows = await r.json();
+    if (!rows.length) { el.innerHTML='<div class="empty"><div class="empty-text">No pending requests</div></div>'; return; }
+    el.innerHTML=`<table class="data-table"><thead><tr><th>User</th><th>Amount</th><th>Screenshot</th><th>Date</th><th>Action</th></tr></thead><tbody>
+      ${rows.map(r=>`<tr>
+        <td style="font-family:var(--font-mono);font-size:11px;">${r.user_id}</td>
+        <td>₹${parseFloat(r.amount).toFixed(2)}</td>
+        <td><a href="${r.screenshot_url}" target="_blank" style="color:var(--gray-300);font-size:11px;">View</a></td>
+        <td style="font-size:11px;color:var(--gray-500)">${new Date(r.created_at).toLocaleDateString('en-IN')}</td>
+        <td>
+          <button class="btn btn-ghost btn-sm" style="margin-right:4px;" onclick="approveRecharge('${r._id}','${r.user_id}','${r.amount}')">Approve</button>
+          <button class="btn btn-danger btn-sm" onclick="rejectRecharge('${r._id}')">Reject</button>
+        </td>
+      </tr>`).join('')}
+    </tbody></table>`;
+  } catch { el.innerHTML='<div class="empty"><div class="empty-text">Failed</div></div>'; }
+}
+
+async function approveRecharge(id, userId, amount) {
+  const r = await apiFetch('/api/admin/recharge-requests/'+id+'/approve', {method:'POST',body:JSON.stringify({note:''})});
+  if (r.ok) { showToast('Approved ₹'+amount); loadAdminRecharges(); }
+  else { const d=await r.json(); showToast(d.error||'Failed','error'); }
+}
+
+async function rejectRecharge(id) {
+  const reason = prompt('Rejection reason (optional):') || '';
+  const r = await apiFetch('/api/admin/recharge-requests/'+id+'/reject', {method:'POST',body:JSON.stringify({note:reason})});
+  if (r.ok) { showToast('Rejected'); loadAdminRecharges(); }
+  else { const d=await r.json(); showToast(d.error||'Failed','error'); }
+}
+
+async function loadAdminUsers() {
+  const el = document.getElementById('adminUsersTable');
+  el.innerHTML='<div class="empty"><div class="spinner"></div></div>';
+  try {
+    const r = await apiFetch('/api/admin/users?limit=50');
+    if (!r.ok) { el.innerHTML='<div class="empty"><div class="empty-text">Unauthorized</div></div>'; return; }
+    const users = await r.json();
+    el.innerHTML=`<table class="data-table"><thead><tr><th>Name</th><th>Email</th><th>Balance</th><th>Status</th><th>Action</th></tr></thead><tbody>
+      ${users.map(u=>`<tr>
+        <td>${u.name}</td>
+        <td style="font-size:12px;color:var(--gray-300)">${u.email}</td>
+        <td>₹${parseFloat(u.wallet_balance||0).toFixed(2)}</td>
+        <td><span class="badge ${u.is_banned?'badge-rejected':'badge-approved'}">${u.is_banned?'Banned':'Active'}</span></td>
+        <td>
+          <button class="btn btn-ghost btn-sm" onclick="toggleBan('${u._id}',${u.is_banned})">${u.is_banned?'Unban':'Ban'}</button>
+          <button class="btn btn-ghost btn-sm" style="margin-left:4px;" onclick="adjustWallet('${u._id}','${u.name}')">Wallet</button>
+        </td>
+      </tr>`).join('')}
+    </tbody></table>`;
+  } catch { el.innerHTML='<div class="empty"><div class="empty-text">Failed</div></div>'; }
+}
+
+async function toggleBan(userId, isBanned) {
+  const r = await apiFetch('/api/admin/users/'+userId+'/'+(isBanned?'unban':'ban'), {method:'POST'});
+  if (r.ok) { showToast(isBanned?'User unbanned':'User banned'); loadAdminUsers(); }
+  else showToast('Failed','error');
+}
+
+async function adjustWallet(userId, name) {
+  const amt = prompt(`Adjust wallet for ${name}\n(positive = credit, negative = debit):`);
+  if (!amt) return;
+  const r = await apiFetch('/api/admin/users/'+userId+'/wallet', {method:'POST',body:JSON.stringify({amount:parseFloat(amt),description:'Admin adjustment'})});
+  if (r.ok) { showToast('Wallet updated'); loadAdminUsers(); }
+  else { const d=await r.json(); showToast(d.error||'Failed','error'); }
+}
+
+async function loadAdminOrders() {
+  const el = document.getElementById('adminOrdersTable');
+  el.innerHTML='<div class="empty"><div class="spinner"></div></div>';
+  try {
+    const r = await apiFetch('/api/admin/orders?limit=30');
+    if (!r.ok) { el.innerHTML='<div class="empty"><div class="empty-text">Unauthorized</div></div>'; return; }
+    const orders = await r.json();
+    el.innerHTML=`<table class="data-table"><thead><tr><th>Service</th><th>Number</th><th>OTP</th><th>Price</th><th>Status</th><th>Date</th></tr></thead><tbody>
+      ${orders.map(o=>`<tr>
+        <td>${o.service_name}</td>
+        <td style="font-family:var(--font-mono);font-size:11px;">${o.number}</td>
+        <td style="font-family:var(--font-mono);font-weight:700;">${o.otp_received||'—'}</td>
+        <td>₹${parseFloat(o.price).toFixed(2)}</td>
+        <td><span class="badge badge-${o.status==='success'?'approved':o.status==='pending'?'pending':'rejected'}">${o.status}</span></td>
+        <td style="font-size:11px;color:var(--gray-500)">${new Date(o.created_at).toLocaleDateString('en-IN')}</td>
+      </tr>`).join('')}
+    </tbody></table>`;
+  } catch { el.innerHTML='<div class="empty"><div class="empty-text">Failed</div></div>'; }
+}
+
+async function createRedeemCodes() {
+  const amount = document.getElementById('redeemAmount').value;
+  const count = parseInt(document.getElementById('redeemCount').value)||1;
+  const expires_in_days = document.getElementById('redeemExpiry').value;
+  const max_uses = document.getElementById('redeemMaxUses').value;
+  const note = document.getElementById('redeemNote').value;
+  if (!amount) { showToast('Enter amount','error'); return; }
+  const r = await apiFetch('/api/admin/redeem-codes', {method:'POST',body:JSON.stringify({amount:parseFloat(amount),count,expires_in_days:expires_in_days?parseInt(expires_in_days):null,max_uses:max_uses?parseInt(max_uses):null,note})});
+  const d = await r.json();
+  if (r.ok) {
+    const codes = d.codes||[];
+    document.getElementById('redeemCodesResult').innerHTML=`
+      <div class="glass-sm" style="padding:16px;">
+        <div style="font-size:12px;color:var(--gray-400);margin-bottom:10px;">${codes.length} code(s) generated:</div>
+        ${codes.map(c=>`<div style="display:flex;align-items:center;gap:8px;margin-bottom:6px;">
+          <span style="font-family:var(--font-mono);font-size:14px;flex:1;">${c}</span>
+          <button class="copy-btn" onclick="copyText('${c}','Code')">Copy</button>
+        </div>`).join('')}
+      </div>`;
+    showToast(codes.length+' code(s) created');
+  } else showToast(d.error||'Failed','error');
+}
+
+async function loadAdminServices() {
+  const el = document.getElementById('servicesAdminList');
+  try {
+    const r = await apiFetch('/api/admin/services');
+    if (!r.ok) return;
+    const svcs = await r.json();
+    el.innerHTML=svcs.length?`<table class="data-table"><thead><tr><th>Name</th><th>Code</th><th>Price</th><th>Active</th><th>Action</th></tr></thead><tbody>
+      ${svcs.map(s=>`<tr>
+        <td>${s.name}</td>
+        <td style="font-family:var(--font-mono);font-size:11px;">${s.api_code||s._id}</td>
+        <td>₹${parseFloat(s.price).toFixed(2)}</td>
+        <td><span class="badge ${s.is_active?'badge-approved':'badge-rejected'}">${s.is_active?'Yes':'No'}</span></td>
+        <td>
+          <button class="btn btn-ghost btn-sm" onclick="toggleService('${s._id}',${s.is_active})">${s.is_active?'Disable':'Enable'}</button>
+          <button class="btn btn-danger btn-sm" style="margin-left:4px;" onclick="deleteService('${s._id}')">Delete</button>
+        </td>
+      </tr>`).join('')}
+    </tbody></table>`:'<div class="empty"><div class="empty-text">No services</div></div>';
+  } catch {}
+}
+
+async function addService() {
+  const name=document.getElementById('svcName').value.trim();
+  const api_code=document.getElementById('svcApiCode').value.trim();
+  const provider_code=document.getElementById('svcProvCode').value.trim();
+  const price=parseFloat(document.getElementById('svcPrice').value)||0;
+  const provider_price=parseFloat(document.getElementById('svcProvPrice').value)||0;
+  const country_code=document.getElementById('svcCountry').value.trim()||'22';
+  if(!name||!api_code){showToast('Name and API code required','error');return;}
+  const r=await apiFetch('/api/admin/services',{method:'POST',body:JSON.stringify({name,api_code,provider_code:provider_code||api_code,price,provider_price,country_code,sms_patterns:[]})});
+  const d=await r.json();
+  if(r.ok){showToast('Service added');loadAdminServices();loadServices();}
+  else showToast(d.error||'Failed','error');
+}
+
+async function toggleService(id, active) {
+  const r=await apiFetch('/api/admin/services/'+id,{method:'PATCH',body:JSON.stringify({is_active:!active})});
+  if(r.ok){showToast('Updated');loadAdminServices();loadServices();}
+  else showToast('Failed','error');
+}
+
+async function deleteService(id) {
+  if(!confirm('Delete this service?'))return;
+  const r=await apiFetch('/api/admin/services/'+id,{method:'DELETE'});
+  if(r.ok){showToast('Deleted');loadAdminServices();loadServices();}
+  else showToast('Failed','error');
+}
+
+async function loadAdminBanners() {
+  const el=document.getElementById('bannersAdminList');
+  try{
+    const r=await apiFetch('/api/admin/banners');
+    if(!r.ok)return;
+    const banners=await r.json();
+    el.innerHTML=banners.length?banners.map(b=>`
+      <div style="display:flex;align-items:center;gap:12px;padding:12px;background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:var(--radius);margin-bottom:8px;">
+        ${b.image_url?`<img src="${b.image_url}" style="width:80px;height:50px;object-fit:cover;border-radius:6px;"/>`:'<div style="width:80px;height:50px;background:var(--gray-800);border-radius:6px;"></div>'}
+        <div style="flex:1"><div style="font-size:13px;font-weight:500;">${b.title}</div><div style="font-size:11px;color:var(--gray-500)">${b.subtitle||''}</div></div>
+        <button class="btn btn-danger btn-sm" onclick="deleteBanner('${b._id}')">Delete</button>
+      </div>`).join(''):'<div class="empty"><div class="empty-text">No banners</div></div>';
+  }catch{}
+}
+
+async function addBanner() {
+  const title=document.getElementById('bannerTitle').value.trim();
+  const subtitle=document.getElementById('bannerSubtitle').value.trim();
+  const link_url=document.getElementById('bannerLink').value.trim();
+  const file=document.getElementById('bannerImageFile').files[0];
+  if(!title){showToast('Title required','error');return;}
+  const fd=new FormData();
+  fd.append('title',title);
+  fd.append('subtitle',subtitle);
+  fd.append('link_url',link_url);
+  if(file)fd.append('image',file);
+  const r=await formFetch('/api/admin/banners',fd);
+  if(r.ok){showToast('Banner added');loadAdminBanners();loadBanners();}
+  else{const d=await r.json();showToast(d.error||'Failed','error');}
+}
+
+async function deleteBanner(id) {
+  const r=await apiFetch('/api/admin/banners/'+id,{method:'DELETE'});
+  if(r.ok){showToast('Deleted');loadAdminBanners();loadBanners();}
+  else showToast('Failed','error');
+}
+
+async function loadAdminSettings() {
+  try{
+    const r=await apiFetch('/api/admin/settings');
+    if(!r.ok)return;
+    const d=await r.json();
+    document.getElementById('settingReferReward').value=d.refer_reward||10;
+    document.getElementById('settingReferMin').value=d.refer_min_recharge||10;
+    document.getElementById('settingMultiOtp').value=(d.multi_otp_extra||[3,2,1,1]).join(',');
+    document.getElementById('settingUpiId').value=d.upi_id||'';
+    document.getElementById('settingMaintenance').checked=!!d.maintenance_mode;
+  }catch{}
+}
+
+async function saveSettings() {
+  const refer_reward=parseFloat(document.getElementById('settingReferReward').value)||10;
+  const refer_min_recharge=parseFloat(document.getElementById('settingReferMin').value)||10;
+  const multi_otp_extra=document.getElementById('settingMultiOtp').value.split(',').map(Number).filter(Boolean);
+  const upi_id=document.getElementById('settingUpiId').value.trim();
+  const maintenance_mode=document.getElementById('settingMaintenance').checked;
+  const r=await apiFetch('/api/admin/settings',{method:'POST',body:JSON.stringify({refer_reward,refer_min_recharge,multi_otp_extra,upi_id,maintenance_mode})});
+  if(r.ok){showToast('Settings saved');}
+  else{const d=await r.json();showToast(d.error||'Failed','error');}
+}
+
+// ─────── INIT ───────
+(async function init() {
+  await tryAutoLogin();
+  updateNavUser();
+  loadServices();
+  loadBanners();
+  // resume polling for active slots
+  activeSlots.filter(s=>s.status==='pending').forEach(s=>startPoll(s.order_id));
+  renderSlots();
+  // slot timer refresh
+  setInterval(()=>{ activeSlots.filter(s=>s.status==='pending'||s.status==='success').forEach(s=>updateSlotTimer(s.order_id)); }, 1000);
+})();
+</script>
+</body>
+</html>
