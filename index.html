@@ -876,17 +876,6 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:0 24px;height:60px;
       <div class="form-group">
         <label class="form-label">Operator</label>
         <select class="form-select" id="orderOperator" onchange="updateOrderPriceForOperator()">
-          <option value="1">Operator-1 (Multi-SMS)</option>
-          <option value="2">Operator-2</option>
-          <option value="3">Operator-3</option>
-          <option value="4">Operator-4</option>
-          <option value="5">Operator-5</option>
-          <option value="6">Operator-6</option>
-          <option value="7">Operator-7</option>
-          <option value="8">Operator-8</option>
-          <option value="9">Operator-9</option>
-          <option value="10">Operator-10</option>
-          <option value="13">Operator-13 (Multi SMS)</option>
         </select>
       </div>
       <div style="background:var(--gray-800);border-radius:var(--radius-sm);padding:12px;font-size:12px;color:var(--gray-400);margin-bottom:16px;">
@@ -914,7 +903,7 @@ let currentBanner = 0;
 let selectedService = null;
 let _apiKeyFull = '';
 let _apiKeyMasked = '';
-let _apiKeyShown = false;
+let _apiKeyShown = false; const OPERATOR_NAMES = {   '1':'Operator-1 (Multi-SMS)','2':'Operator-2','3':'Operator-3','4':'Operator-4','5':'Operator-5',   '6':'Operator-6','7':'Operator-7','8':'Operator-8','9':'Operator-9','10':'Operator-10',   '11':'Operator-11','12':'Operator-12','13':'Operator-13 (Multi SMS)','14':'Operator-14','15':'Operator-15' };
 
 // ─────── UTILS ───────
 function showToast(msg, type='success') {
@@ -1221,6 +1210,25 @@ function scrollToServices() {
   document.getElementById('orderModal').classList.add('open');
 }
 
+function populateOperatorOptions() {
+  const sel = document.getElementById('orderOperator');
+  const prices = (selectedService && selectedService.operator_prices) || {};
+  const codes = Object.keys(prices);
+  let html = '';
+  if (codes.length) {
+    codes.sort((a,b)=>Number(a)-Number(b));
+    html = codes.map(code => {
+      const name = OPERATOR_NAMES[code] || ('Operator-'+code);
+      const price = parseFloat(prices[code]).toFixed(2);
+      return `<option value="${code}">${name} — ₹${price}</option>`;
+    }).join('');
+  } else {
+    const fallbackPrice = parseFloat((selectedService && selectedService.price) || 0).toFixed(2);
+    html = `<option value="1">${OPERATOR_NAMES['1']} — ₹${fallbackPrice}</option>`;
+  }
+  sel.innerHTML = html;
+}
+  
 function updateOrderPriceForOperator() {
   if (!selectedService) return;
   const op = document.getElementById('orderOperator').value;
