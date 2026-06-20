@@ -2,8 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
-<title>Flash OTP Hub</title>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no"/><title>Flash OTP Hub</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500;600&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet"/>
 <style>
@@ -18,8 +17,9 @@
   --transition:0.2s cubic-bezier(0.4,0,0.2,1);
 }
 *{margin:0;padding:0;box-sizing:border-box;}
+html{touch-action:pan-x pan-y;-ms-touch-action:pan-x pan-y;}
 html{scroll-behavior:smooth;}
-body{background:var(--black);color:var(--white);font-family:var(--font-body);font-size:14px;line-height:1.6;min-height:100vh;overflow-x:hidden;}
+body{background:var(--black);color:var(--white);font-family:var(--font-body);font-size:14px;line-height:1.6;min-height:100vh;overflow-x:hidden;padding-bottom:70px;}
 a{color:inherit;text-decoration:none;}
 button{cursor:pointer;font-family:var(--font-body);}
 input,select,textarea{font-family:var(--font-body);}
@@ -60,7 +60,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:0 24px;height:60px;
 .page.active{display:block;}
 
 /* HERO */
-.hero{padding:80px 0 60px;}
+.hero{padding:40px 0 40px;}
 .hero-tag{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--glass-border);border-radius:100px;padding:4px 12px 4px 6px;font-size:11px;color:var(--gray-300);letter-spacing:0.08em;text-transform:uppercase;margin-bottom:28px;}
 .hero-tag .pulse{width:6px;height:6px;background:var(--white);border-radius:50%;position:relative;}
 .hero-tag .pulse::after{content:'';position:absolute;inset:-3px;border-radius:50%;border:1px solid var(--gray-400);animation:pulse 2s ease-out infinite;}
@@ -307,9 +307,18 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:0 24px;height:60px;
 /* MOBILE */
 @media(max-width:640px){
   .hero h1{font-size:36px;}
+  .stats-row{margin:16px 0;grid-template-columns:repeat(3,1fr);}
+  .stat{padding:10px;}
+  .stat-num{font-size:16px;}
+  .stat-label{font-size:9px;}
   .wallet-hero{grid-template-columns:1fr;}
   .info-grid{grid-template-columns:1fr;}
-  .stats-row{grid-template-columns:1fr;}
+   .services-grid{grid-template-columns:repeat(4,1fr)!important;}
+  .service-card{padding:12px;}
+  .service-logo{width:32px;height:32px;border-radius:8px;margin-bottom:8px;}
+  .service-name{font-size:12px;}
+  .service-price{font-size:11px;}
+  .service-code{font-size:9px;}
   .banner-slide{aspect-ratio:2/1;}
   nav .nav-links{display:none;}
   .mobile-nav{display:flex!important;}
@@ -403,7 +412,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:0 24px;height:60px;
   <div class="stats-row" id="statsRow">
     <div class="stat"><div class="stat-num" id="statServices">—</div><div class="stat-label">Services</div></div>
     <div class="stat"><div class="stat-num">₹20.00</div><div class="stat-label">Min. Recharge</div></div>
-    <div class="stat"><div class="stat-num">10min</div><div class="stat-label">Number Validity</div></div>
+    <div class="stat"><div class="stat-num">20min</div><div class="stat-label">Number Validity</div></div>
   </div>
 
   <!-- BANNERS -->
@@ -426,7 +435,7 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:0 24px;height:60px;
   <!-- SERVICES -->
   <div id="servicesSection">
     <div class="section-header">
-      <div class="section-title">Services</div>
+      <div class="section-title" onclick="showPage('buy')" style="cursor:pointer;">Services →</div>
       <span class="section-sub" id="servicesCount"></span>
     </div>
     <div class="services-grid" id="servicesGrid">
@@ -435,6 +444,51 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:0 24px;height:60px;
       <div class="service-card" style="opacity:0.3" id="sk2"><div class="service-logo"></div><div style="height:12px;background:var(--gray-800);border-radius:4px;margin-bottom:6px;"></div><div style="height:10px;background:var(--gray-800);border-radius:4px;width:60%;"></div></div>
       <div class="service-card" style="opacity:0.2" id="sk3"><div class="service-logo"></div><div style="height:12px;background:var(--gray-800);border-radius:4px;margin-bottom:6px;"></div><div style="height:10px;background:var(--gray-800);border-radius:4px;width:60%;"></div></div>
     </div>
+    <!-- ADD after servicesGrid div -->
+<div id="moreServicesBtn" onclick="showPage('buy')" style="display:none;cursor:pointer;text-align:center;margin-top:20px;padding:16px;background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:var(--radius);font-size:16px;font-weight:700;letter-spacing:0.03em;">
+  View All Services →
+</div>
+
+<div style="margin-top:40px;padding-top:20px;border-top:1px solid var(--glass-border);">
+  <div style="text-align:center;display:flex;flex-wrap:wrap;justify-content:center;gap:8px 16px;margin-bottom:24px;">
+    <span onclick="document.getElementById('policy-terms').style.display='block';document.getElementById('policy-box').style.display='block'" style="font-size:11px;color:var(--gray-400);cursor:pointer;">Terms & Conditions</span>
+    <span style="font-size:11px;color:var(--gray-700);">·</span>
+    <span onclick="document.getElementById('policy-privacy').style.display='block';document.getElementById('policy-box').style.display='block'" style="font-size:11px;color:var(--gray-400);cursor:pointer;">Privacy Policy</span>
+    <span style="font-size:11px;color:var(--gray-700);">·</span>
+    <span onclick="document.getElementById('policy-tou').style.display='block';document.getElementById('policy-box').style.display='block'" style="font-size:11px;color:var(--gray-400);cursor:pointer;">Terms of Use</span>
+    <span style="font-size:11px;color:var(--gray-700);">·</span>
+    <span onclick="document.getElementById('policy-refund').style.display='block';document.getElementById('policy-box').style.display='block'" style="font-size:11px;color:var(--gray-400);cursor:pointer;">Refund Policy</span>
+  </div>
+
+  <div id="policy-box" style="display:none;background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:var(--radius-lg);padding:20px;font-size:12px;color:var(--gray-300);line-height:1.8;">
+    <button onclick="document.getElementById('policy-box').style.display='none';['policy-terms','policy-privacy','policy-tou','policy-refund'].forEach(id=>document.getElementById(id).style.display='none')" style="float:right;background:none;border:none;color:var(--gray-400);font-size:16px;cursor:pointer;">✕</button>
+
+    <div id="policy-terms" style="display:none;">
+      <div style="font-family:var(--font-display);font-size:16px;font-weight:600;color:var(--white);margin-bottom:12px;">Terms & Conditions</div>
+      By using Flash OTP Hub, you agree to use our virtual number service only for lawful purposes. You must not use our numbers for fraud, spam, or any illegal activity. We reserve the right to suspend accounts that violate these terms. All purchases are final unless eligible for a refund per our Refund Policy. We do not guarantee OTP delivery as it depends on third-party providers. Flash OTP Hub is not responsible for any loss arising from service unavailability.
+    </div>
+
+    <div id="policy-privacy" style="display:none;">
+      <div style="font-family:var(--font-display);font-size:16px;font-weight:600;color:var(--white);margin-bottom:12px;">Privacy Policy</div>
+      We collect your email address and usage data solely to provide and improve our service. We do not sell or share your personal data with third parties. Wallet transactions and order history are stored securely. We use cookies and local storage for session management. By using Flash OTP Hub, you consent to this data usage. You may request deletion of your account and data by contacting support.
+    </div>
+
+    <div id="policy-tou" style="display:none;">
+      <div style="font-family:var(--font-display);font-size:16px;font-weight:600;color:var(--white);margin-bottom:12px;">Terms of Use</div>
+      Flash OTP Hub provides temporary Indian virtual mobile numbers for OTP verification. Numbers are valid for 20 minutes from purchase. Each number is single-use and may not be reused after expiry. You must be 18 years or older to use this service. Reselling of numbers or API access without permission is strictly prohibited. We reserve the right to modify pricing and service availability without prior notice.
+    </div>
+
+    <div id="policy-refund" style="display:none;">
+      <div style="font-family:var(--font-display);font-size:16px;font-weight:600;color:var(--white);margin-bottom:12px;">Refund Policy</div>
+      If a number is cancelled within the allowed cancellation window and no OTP was received, a full  refund will be credited to your wallet. Wallet balance is non-refundable to original payment method. Recharge amounts once added to wallet cannot be withdrawn as cash. In case of technical failure on our end, credits will be issued. Disputes must be raised within 24 hours of the transaction. We do not offer refunds for successfully delivered OTPs.
+    </div>
+  </div>
+</div>
+
+ <div style="text-align:center;margin-top:32px;padding-bottom:12px;font-size:11px;color:var(--gray-600);">
+    Developed by <a href="https://www.instagram.com/mr_flashbhai" target="_blank" style="color:var(--gray-400);font-weight:600;text-decoration:none;">𝐌𝐫 𝐅𝐋𝐀𝐒𝐇</a>
+  </div>
+
   </div>
 </div>
 
@@ -632,7 +686,11 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:0 24px;height:60px;
 <!-- ===== PROFILE PAGE ===== -->
 <div class="page" id="page-profile">
   <div class="profile-header">
-    <div class="profile-avatar" id="profileAvatar">U</div>
+    <div class="profile-avatar" id="profileAvatar" onclick="document.getElementById('avatarInput').click()" style="cursor:pointer;overflow:hidden;position:relative;">
+  <img id="profileAvatarImg" src="" style="display:none;width:100%;height:100%;object-fit:cover;border-radius:50%;"/>
+  <span id="profileAvatarLetter">U</span>
+  <input type="file" id="avatarInput" accept="image/*" style="display:none;" onchange="uploadAvatar(event)"/>
+</div>
     <div>
       <div class="profile-name" id="profileName">—</div>
       <div class="profile-email" id="profileEmail">—</div>
@@ -1060,7 +1118,11 @@ function updateNavUser() {
   const adminBtn = document.getElementById('adminNavBtn');
   if (currentUser) {
     nav.style.display='flex';
-    nav.textContent = (currentUser.name||'U')[0].toUpperCase();
+    if (currentUser.avatar_url) {
+      nav.innerHTML = `<img src="${currentUser.avatar_url}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;"/>`;
+    } else {
+      nav.textContent = (currentUser.name||'U')[0].toUpperCase();
+    }
     bal.style.display='block';
     bal.textContent = '₹'+(currentUser.wallet_balance||0).toFixed(2);
     loginBtn.style.display='none';
@@ -1126,13 +1188,15 @@ async function loadServices() {
     document.getElementById('statServices').textContent = services.length;
     document.getElementById('servicesCount').textContent = services.length + ' available';
     if (!services.length) { grid.innerHTML='<div class="empty"><div class="empty-icon">📱</div><div class="empty-text">No services available</div></div>'; return; }
-    grid.innerHTML = services.map(s => `
+    const display = services.slice(0, 24);
+    grid.innerHTML = display.map(s => `
       <div class="service-card" onclick="openBuyModal('${s._id}','${escape(s.name)}','${s.price}','${s.logo_url||''}')">
         <div class="service-logo">${s.logo_url?`<img src="${s.logo_url}" alt="${s.name}" onerror="this.style.display='none'"/>`:'📱'}</div>
         <div class="service-name">${s.name}</div>
         <div class="service-price">₹${parseFloat(s.price).toFixed(2)}</div>
         <div class="service-code">${s.api_code||s._id}</div>
       </div>`).join('');
+    document.getElementById('moreServicesBtn').style.display = services.length > 20 ? 'block' : 'none';
   } catch(e) { console.error(e); }
 }
 
@@ -1592,7 +1656,7 @@ async function renderProfile() {
   const u = currentUser;
   document.getElementById('profileName').textContent = u.name;
   document.getElementById('profileEmail').textContent = u.email;
-  document.getElementById('profileAvatar').textContent = (u.name||'U')[0].toUpperCase();
+  document.getElementById('profileAvatarLetter').textContent = (u.name||'U')[0].toUpperCase();
   document.getElementById('profileBalance').textContent = (u.wallet_balance||0).toFixed(2);
   document.getElementById('profileBadge').textContent = u.is_admin?'Admin':'Member';
   document.getElementById('referCode').textContent = u.refer_code||'——';
@@ -1600,6 +1664,11 @@ async function renderProfile() {
   document.getElementById('referEarned').textContent = ((u.total_referred||0)*10).toFixed(0);
   const joined = u.created_at ? new Date(u.created_at).toLocaleDateString('en-IN',{month:'short',year:'numeric'}) : '—';
   document.getElementById('profileJoined').textContent = joined;
+  if (u.avatar_url) {
+    document.getElementById('profileAvatarImg').src = u.avatar_url;
+    document.getElementById('profileAvatarImg').style.display = 'block';
+    document.getElementById('profileAvatarLetter').style.display = 'none';
+  }
   // API key
   _apiKeyFull = u.api_key||'';
   _apiKeyMasked = _apiKeyFull ? _apiKeyFull.slice(0,7)+'••••••••••••••••••••••••'+_apiKeyFull.slice(-6) : 'Not set';
@@ -1616,6 +1685,21 @@ function toggleApiKey() {
 
 function copyApiKey() { copyText(_apiKeyFull,'API key'); }
 function copyRefer() { copyText(currentUser?.refer_code||'','Referral code'); }
+async function uploadAvatar(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const fd = new FormData();
+  fd.append('avatar', file);
+  showToast('Uploading...');
+  const res = await formFetch('/api/user/avatar', fd);
+  const d = await res.json();
+  if (res.ok) {
+    document.getElementById('profileAvatarImg').src = d.avatar_url;
+    document.getElementById('profileAvatarImg').style.display = 'block';
+    document.getElementById('profileAvatarLetter').style.display = 'none';
+    showToast('Photo updated!');
+  } else showToast(d.error || 'Failed', 'error');
+}
 
 // ─────── API DOCS ───────
 async function loadApiDocs() {
