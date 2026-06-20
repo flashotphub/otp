@@ -1195,7 +1195,7 @@ function scrollToServices() {
 
 // ─────── BUY MODAL ───────
 
-  function openBuyModal(id, name, price, logo) {
+ function openBuyModal(id, name, price, logo) {
   if (!requireAuth()) return;
   const svc = _allServices.find(s => s._id === id);
   selectedService = {id, name: unescape(name), price, logo, operator_prices: (svc && svc.operator_prices) || {}};
@@ -1205,7 +1205,7 @@ function scrollToServices() {
   logoEl.innerHTML = logo ? `<img src="${logo}" style="width:100%;height:100%;object-fit:cover;border-radius:10px;" onerror="this.parentElement.textContent='📱'"/>` : '📱';
   document.getElementById('buyBtn').disabled = false;
   document.getElementById('buyBtn').innerHTML = 'Buy Number';
-  document.getElementById('orderOperator').value = '1';
+  populateOperatorOptions();
   updateOrderPriceForOperator();
   document.getElementById('orderModal').classList.add('open');
 }
