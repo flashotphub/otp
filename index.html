@@ -644,6 +644,10 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:0 24px;height:60px;
     <div class="section-header" style="margin-bottom:16px;">
       <div class="section-title">Add Money</div>
     </div>
+    <div style="display:flex;background:var(--gray-800);border-radius:var(--radius-sm);padding:3px;margin-bottom:20px;">
+      <div id="tab-autoupi" onclick="switchPayTab('autoupi')" style="flex:1;text-align:center;padding:8px;border-radius:7px;font-size:13px;cursor:pointer;background:var(--white);color:var(--black);font-weight:500;transition:all 0.2s;">⚡ Auto UPI</div>
+      <div id="tab-manual" onclick="switchPayTab('manual')" style="flex:1;text-align:center;padding:8px;border-radius:7px;font-size:13px;cursor:pointer;color:var(--gray-400);transition:all 0.2s;">📸 Manual</div>
+    </div>
     <div class="amount-pills">
       <div class="amount-pill" onclick="setAmount(20)">₹20</div>
       <div class="amount-pill" onclick="setAmount(50)">₹50</div>
@@ -652,16 +656,25 @@ nav{position:fixed;top:0;left:0;right:0;z-index:100;padding:0 24px;height:60px;
       <div class="amount-pill" onclick="setAmount(500)">₹500</div>
     </div>
     <input class="form-input" type="number" id="rechargeAmount" placeholder="Enter amount (min ₹20)" min="20"/>
-    <div style="font-size:12px;color:var(--gray-500);margin-top:6px;" id="upiInfo">Loading UPI details...</div>
-    <div class="upload-zone" id="uploadZone">
-      <input type="file" accept="image/*" id="screenshotFile" onchange="previewScreenshot(event)"/>
-      <div class="upload-icon">📸</div>
-      <div class="upload-text">Upload payment screenshot</div>
-      <img class="upload-preview" id="uploadPreview"/>
+    <div id="panel-autoupi">
+      <div style="background:var(--gray-800);border-radius:var(--radius-sm);padding:12px 14px;margin-top:12px;font-size:12px;color:var(--gray-400);line-height:1.7;">
+        ✅ QR code automatically generated<br/>
+        ✅ Payment detected in real-time<br/>
+        ✅ Wallet credited instantly
+      </div>
+      <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:14px;" onclick="initiateAutoUPI()">⚡ Pay via UPI (Auto-detect)</button>
     </div>
-    <button class="btn btn-primary" style="width:100%;justify-content:center;margin-top:14px;" onclick="submitRecharge()">Submit Recharge Request</button>
+    <div id="panel-manual" style="display:none;">
+      <div style="font-size:12px;color:var(--gray-500);margin-top:8px;" id="upiInfo">Loading UPI details...</div>
+      <div class="upload-zone" id="uploadZone" style="margin-top:12px;">
+        <input type="file" accept="image/*" id="screenshotFile" onchange="previewScreenshot(event)"/>
+        <div class="upload-icon">📸</div>
+        <div class="upload-text">Upload payment screenshot</div>
+        <img class="upload-preview" id="uploadPreview"/>
+      </div>
+      <button class="btn btn-ghost" style="width:100%;justify-content:center;margin-top:14px;border-color:var(--gray-600);" onclick="submitRecharge()">Submit for Manual Approval</button>
+    </div>
   </div>
-
   <!-- REDEEM -->
   <div style="margin-top:20px;">
     <div class="section-title" style="margin-bottom:4px;">Redeem Code</div>
@@ -2004,12 +2017,91 @@ async function saveSettings() {
   else{const d=await r.json();showToast(d.error||'Failed','error');}
 }
 
+// ─────── PAYMENT TABS ───────
+function switchPayTab(tab) {
+  const isAuto = tab === 'autoupi';
+  document.getElementById('tab-autoupi').style.cssText = isAuto
+    ? 'flex:1;text-align:center;padding:8px;border-radius:7px;font-size:13px;cursor:pointer;background:var(--white);color:var(--black);font-weight:500;transition:all 0.2s;'
+    : 'flex:1;text-align:center;padding:8px;border-radius:7px;font-size:13px;cursor:pointer;color:var(--gray-400);transition:all 0.2s;';
+  document.getElementById('tab-manual').style.cssText = !isAuto
+    ? 'flex:1;text-align:center;padding:8px;border-radius:7px;font-size:13px;cursor:pointer;background:var(--white);color:var(--black);font-weight:500;transition:all 0.2s;'
+    : 'flex:1;text-align:center;padding:8px;border-radius:7px;font-size:13px;cursor:pointer;color:var(--gray-400);transition:all 0.2s;';
+  document.getElementById('panel-autoupi').style.display = isAuto ? '' : 'none';
+  document.getElementById('panel-manual').style.display = !isAuto ? '' : 'none';
+}
+
+// ─────── AUTOUPI ───────
+async function initiateAutoUPI() {
+  if (!requireAuth()) return;
+  const amount = parseFloat(document.getElementById('rechargeAmount').value);
+  if (!amount || amount < 20) { showToast('Enter amount (min ₹20)', 'error'); return; }
+  const btn = document.querySelector('#panel-autoupi .btn-primary');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Creating order...';
+  try {
+    const res = await apiFetch('/api/payment/autoupi/initiate', {
+      method: 'POST',
+      body: JSON.stringify({ amount })
+    });
+    const d = await res.json();
+    if (!res.ok) {
+      showToast(d.error || 'Failed to create order', 'error');
+      btn.disabled = false;
+      btn.innerHTML = '⚡ Pay via UPI (Auto-detect)';
+      return;
+    }
+    showToast('Redirecting to payment page...');
+    localStorage.setItem('pending_autoupi', JSON.stringify({
+      merchant_order_id: d.merchant_order_id,
+      amount: amount,
+      ts: Date.now()
+    }));
+    window.location.href = d.payment_url;
+  } catch(e) {
+    showToast('Network error', 'error');
+    btn.disabled = false;
+    btn.innerHTML = '⚡ Pay via UPI (Auto-detect)';
+  }
+}
+
+function checkAutoUPIReturn() {
+  const pending = localStorage.getItem('pending_autoupi');
+  if (!pending) return;
+  const { merchant_order_id, amount, ts } = JSON.parse(pending);
+  if (Date.now() - ts > 10 * 60 * 1000) { localStorage.removeItem('pending_autoupi'); return; }
+  localStorage.removeItem('pending_autoupi');
+  showToast('Checking payment status...');
+  let attempts = 0;
+  const poll = setInterval(async () => {
+    attempts++;
+    try {
+      const res = await apiFetch(`/api/payment/autoupi/status/${merchant_order_id}`);
+      if (!res.ok) { clearInterval(poll); return; }
+      const d = await res.json();
+      if (d.status === 'approved') {
+        clearInterval(poll);
+        showToast(`₹${amount} added to wallet! ✅`);
+        const r = await apiFetch('/api/user/profile');
+        if (r.ok) { const u = await r.json(); currentUser = u; updateNavUser(); }
+        showPage('wallet'); loadWalletPage();
+      } else if (d.status === 'expired' || d.status === 'failed') {
+        clearInterval(poll);
+        showToast('Payment not completed. Try again.', 'error');
+      } else if (attempts >= 20) {
+        clearInterval(poll);
+        showToast('Payment pending — wallet will update when confirmed.', 'success');
+      }
+    } catch { clearInterval(poll); }
+  }, 3000);
+}
+  
 // ─────── INIT ───────
 (async function init() {
   await tryAutoLogin();
   updateNavUser();
   loadServices();
   loadBanners();
+  checkAutoUPIReturn();
   // resume polling for active slots
   activeSlots.filter(s=>s.status==='pending').forEach(s=>startPoll(s.order_id));
   renderSlots();
